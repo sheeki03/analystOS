@@ -187,8 +187,8 @@ class ODRService:
             if entity_summary:
                 enhanced_query = f"Pre-extracted entities:\n{entity_summary}\n\n{enhanced_query}"
 
-            # Continue with the enhanced query
-            return await self.generate_report(enhanced_query, sources, config, entity_summary)
+            # Continue with the enhanced query (pass None for entity_summary since it's already in enhanced_query)
+            return await self.generate_report(enhanced_query, sources, config, None)
             
         except Exception as e:
             logger.error(f"Failed to continue research with clarification: {e}")

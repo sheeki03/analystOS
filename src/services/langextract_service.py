@@ -205,7 +205,7 @@ class LangExtractService:
                     confidence=getattr(ext, 'confidence', None)
                 )
             elif isinstance(ext, dict):
-                entity_text = ext.get('text', ext.get('extraction_text', ''))
+                entity_text = ext.get('text', ext.get('extraction_text')) or ''
                 start = ext.get('start', 0)
                 # Default end to start + len(text) if not provided
                 end = ext.get('end', start + len(entity_text)) if entity_text else start
@@ -239,8 +239,8 @@ class LangExtractService:
 
     def _validate_model_for_openrouter(self, model: str) -> None:
         """Log warning if model might not be OpenRouter-compatible."""
-        # Only warn if using OpenRouter (not plain OpenAI)
-        using_openrouter = os.getenv("OPENROUTER_API_KEY") and not os.getenv("OPENAI_API_KEY")
+        # Warn if using OpenRouter and model doesn't look like provider/model format
+        using_openrouter = bool(os.getenv("OPENROUTER_API_KEY"))
         if using_openrouter and "/" not in model:
             logger.warning(
                 f"Model '{model}' may not be OpenRouter-compatible. "
@@ -404,8 +404,14 @@ class LangExtractService:
                                 **model_param,
                                 **kwargs
                             )
-                        except TypeError:
-                            continue
+                        except TypeError as e:
+                            # Only continue if it's a signature mismatch error
+                            msg = str(e)
+                            if ("unexpected keyword argument" in msg or
+                                "multiple values for argument" in msg or
+                                "missing required positional argument" in msg):
+                                continue
+                            raise
 
         # If all combinations fail, raise
         raise RuntimeError("Could not find compatible lx.extract API signature")
@@ -453,8 +459,14 @@ class LangExtractService:
                                 **model_param,
                                 **kwargs
                             )
-                        except TypeError:
-                            continue
+                        except TypeError as e:
+                            # Only continue if it's a signature mismatch error
+                            msg = str(e)
+                            if ("unexpected keyword argument" in msg or
+                                "multiple values for argument" in msg or
+                                "missing required positional argument" in msg):
+                                continue
+                            raise
 
         raise RuntimeError("Could not find compatible lx.extract API signature")
 
@@ -516,9 +528,14 @@ class LangExtractService:
 
 # Global instance
 _service: Optional[LangExtractService] = None
+_init_lock = asyncio.Lock()
 
 async def get_langextract_service() -> LangExtractService:
+    """Get or create the global LangExtractService instance (thread-safe)."""
     global _service
-    if _service is None:
-        _service = LangExtractService()
+    if _service is not None:
+        return _service
+    async with _init_lock:
+        if _service is None:
+            _service = LangExtractService()
     return _service
