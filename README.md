@@ -1,4 +1,4 @@
-# AI Research Agent 🤖📊
+# analystOS 🤖📊
 
 > **AI-powered research platform with Web UI + optional Notion automation**
 
