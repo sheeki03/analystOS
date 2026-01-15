@@ -51,9 +51,9 @@ A production-ready research automation platform powered by OpenRouter (50+ AI mo
 - **Portfolio Intelligence**: Multi-coin comparisons and trend analysis
 
 ### 🧠 **Advanced AI Integration**
-- **Multi-Model Support**: GPT-4, Claude Sonnet 4, Gemini 2.5 Pro, Qwen, DeepSeek R1
-- **Nano-GPT Integration**: DMind-1 and specialized models
+- **Multi-Model Support**: GPT-5.2, Claude Opus 4.5, Gemini 3, Qwen, DeepSeek R1
 - **OpenRouter API**: Unified access to 50+ AI models
+- **Free Tier Models**: Qwen3, DeepSeek R1T Chimera for cost-effective research
 - **Custom Research Prompts**: Specialized prompts for due diligence and analysis
 
 ## 🏗️ Architecture
@@ -138,7 +138,6 @@ OPENROUTER_API_KEY=your_openrouter_api_key_here
 # Optional: Additional AI Providers
 OPENAI_API_KEY=your_openai_key_here
 ANTHROPIC_API_KEY=your_anthropic_key_here
-NANOGPT_API_KEY=your_nanogpt_key_here
 
 # Optional: Notion Integration
 NOTION_TOKEN=your_notion_integration_token
@@ -243,18 +242,20 @@ The platform supports multiple AI providers and models:
 ```python
 # Available Models
 AI_MODEL_OPTIONS = {
-    # Nano-GPT Models  
-    "dmind/dmind-1": "DMind-1",
-    "dmind/dmind-1-mini": "DMind-1 Mini",
-    
-    # OpenRouter Models
-    "qwen/qwen3-30b-a3b:free": "Qwen3 30B", 
-    "qwen/qwen3-235b-a22b:free": "Qwen3 235B",
-    "google/gemini-2.5-pro-preview": "Gemini 2.5 Pro",
-    "openai/o3": "OpenAI o3",
-    "openai/gpt-4.1": "GPT-4.1",
-    "anthropic/claude-sonnet-4": "Claude Sonnet 4",
-    "tngtech/deepseek-r1t-chimera:free": "DeepSeek R1T Chimera"
+    # OpenAI Models
+    "openai/gpt-5.2": "GPT-5.2",
+    "openai/gpt-5.2-pro": "GPT-5.2 Pro",
+    # Anthropic Models
+    "anthropic/claude-sonnet-4.5": "Claude Sonnet 4.5",
+    "anthropic/claude-opus-4.5": "Claude Opus 4.5",
+    # Google Models
+    "google/gemini-3": "Gemini 3",
+    "google/gemini-2.5-pro": "Gemini 2.5 Pro",
+    "google/gemini-2.5-flash": "Gemini 2.5 Flash",
+    # Free Models
+    "qwen/qwen3-30b-a3b:free": "Qwen3 30B (Free)",
+    "qwen/qwen3-235b-a22b:free": "Qwen3 235B (Free)",
+    "tngtech/deepseek-r1t-chimera:free": "DeepSeek R1T Chimera (Free)",
 }
 ```
 
