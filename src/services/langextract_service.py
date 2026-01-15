@@ -200,8 +200,8 @@ class LangExtractService:
                     entity_class=ext.extraction_class,
                     entity_text=entity_text,
                     attributes=getattr(ext, 'attributes', {}) or {},
-                    source_start=getattr(ext, 'start', 0) + offset,
-                    source_end=getattr(ext, 'end', len(entity_text)) + offset,
+                    source_start=(getattr(ext, 'start', None) or 0) + offset,
+                    source_end=(getattr(ext, 'end', None) or len(entity_text)) + offset,
                     source_name=source_name,
                     source_type=source_type,
                     confidence=getattr(ext, 'confidence', None)
@@ -351,8 +351,8 @@ class LangExtractService:
                     ]
                     examples.append(lx.data.ExampleData(text=ex["text"], extractions=extractions))
                 return examples
-        except Exception:
-            pass
+        except (ImportError, AttributeError) as e:
+            logger.debug(f"langextract types unavailable, using raw dicts: {e}")
         # Fallback: return raw dicts (may work with some versions)
         return FEW_SHOT_EXAMPLES
 
