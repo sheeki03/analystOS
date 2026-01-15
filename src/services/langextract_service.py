@@ -142,6 +142,8 @@ class LangExtractService:
         if len(text) <= chunk_size:
             return [(0, len(text), text)]
 
+        # Clamp overlap to prevent chunk explosion if overlap >= chunk_size
+        overlap = min(overlap, max(0, chunk_size - 1))
         chunks = []
         start = 0
         while start < len(text):
@@ -205,7 +207,7 @@ class LangExtractService:
                     confidence=getattr(ext, 'confidence', None)
                 )
             elif isinstance(ext, dict):
-                entity_text = ext.get('text', ext.get('extraction_text')) or ''
+                entity_text = ext.get('text') or ext.get('extraction_text') or ''
                 start = ext.get('start', 0)
                 # Default end to start + len(text) if not provided
                 end = ext.get('end', start + len(entity_text)) if entity_text else start
