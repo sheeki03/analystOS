@@ -1,10 +1,32 @@
 # AI Research Agent 🤖📊
 
-> **Advanced Multi-Modal Research Platform with AI-Powered Analysis, Notion CRM Integration, and Crypto Intelligence**
+> **Add projects to Notion → Get automated AI research reports. Zero manual work.**
 
-A comprehensive, production-ready research automation platform that combines document processing, web scraping, AI analysis, and real-time monitoring to deliver intelligent research workflows.
+A production-ready research automation platform powered by OpenRouter (50+ AI models). Simply add a project to your Notion database and the agent automatically researches, analyzes, scores, and publishes a comprehensive report back to Notion.
+
+## ✨ How It Works
+
+```
+1. Add a project to your Notion database
+2. Agent automatically detects the new entry
+3. AI researches the project using multiple sources
+4. Generates comprehensive due diligence report
+5. Scores and evaluates the project
+6. Publishes everything back to Notion
+```
+
+**That's it. Fully automated research pipeline.**
+
+---
 
 ## 🌟 Key Features
+
+### 🔗 **Notion Automation (Zero-Touch Research)**
+- **Add & Forget**: Add projects to Notion, get full research reports automatically
+- **Real-Time Monitoring**: Watches your Notion database for new entries
+- **Auto-Research Pipeline**: Triggers deep research on new projects
+- **AI Scoring**: Automated due diligence scoring and evaluation
+- **Direct Publishing**: Reports published directly to your Notion pages
 
 ### 🔬 **Interactive Research Suite**
 - **Multi-Format Document Processing**: PDF, DOCX, TXT, Markdown with OCR support
@@ -12,12 +34,6 @@ A comprehensive, production-ready research automation platform that combines doc
 - **Advanced Web Scraping**: Firecrawl-powered content extraction with sitemap discovery
 - **Deep Research Mode**: LangChain's Open Deep Research (ODR) framework integration
 - **RAG-Powered Chat**: Context-aware Q&A about research content using FAISS vector search
-
-### 🔗 **Notion CRM Automation**
-- **Real-Time Database Monitoring**: Automated polling of Notion databases
-- **Intelligent Workflow Triggers**: Research pipeline activation on new entries
-- **AI-Powered Project Scoring**: Automated due diligence and evaluation
-- **Direct Publishing**: Research reports published directly to Notion pages
 
 ### 💰 **Crypto Intelligence Hub**
 - **Live Market Data**: Real-time cryptocurrency information via CoinGecko MCP
