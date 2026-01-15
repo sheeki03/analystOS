@@ -1,21 +1,30 @@
 # AI Research Agent 🤖📊
 
-> **Add projects to Notion → Get automated AI research reports. Zero manual work.**
+> **AI-powered research platform with Web UI + optional Notion automation**
 
-A production-ready research automation platform powered by OpenRouter (50+ AI models). Simply add a project to your Notion database and the agent automatically researches, analyzes, scores, and publishes a comprehensive report back to Notion.
+A production-ready research automation platform powered by OpenRouter (50+ AI models). Use the interactive web interface for on-demand research, or connect Notion for fully automated workflows.
 
-## ✨ How It Works
+## ✨ Two Ways to Use
 
+### 🖥️ **Web UI (Interactive Research)**
 ```
-1. Add a project to your Notion database
-2. Agent automatically detects the new entry
-3. AI researches the project using multiple sources
-4. Generates comprehensive due diligence report
-5. Scores and evaluates the project
-6. Publishes everything back to Notion
+1. Open the Streamlit web interface
+2. Upload documents, add URLs, or enter a research query
+3. Select your AI model (GPT-4, Claude, Gemini, etc.)
+4. Get comprehensive research reports instantly
+5. Chat with your research using RAG-powered Q&A
 ```
 
-**That's it. Fully automated research pipeline.**
+### 🔗 **Notion Automation (Zero-Touch Mode)**
+```
+1. Connect your Notion database
+2. Add a project to Notion
+3. Agent automatically detects the new entry
+4. AI researches, scores, and evaluates
+5. Full report published back to Notion
+```
+
+**Use either mode independently, or both together.**
 
 ---
 
