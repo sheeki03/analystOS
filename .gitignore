@@ -141,3 +141,7 @@ yarn-error.log*
 /.cursor
 .env.example
 /.taskmaster
+
+# FewWord context plugin
+.fewword/scratch/
+.fewword/index/
