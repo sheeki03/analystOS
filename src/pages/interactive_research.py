@@ -38,12 +38,29 @@ from src.core.rag_utils import (
 from src.models.chat_models import ChatSession, ChatHistoryItem, UserHistoryEntry
 from src.services.user_history_service import user_history_service
 from src.audit_logger import (
-    get_audit_logger, 
-    log_ai_interaction, 
-    log_document_processing, 
-    log_web_scraping, 
-    log_docsend_processing, 
+    get_audit_logger,
+    log_ai_interaction,
+    log_document_processing,
+    log_web_scraping,
+    log_docsend_processing,
     log_user_action
+)
+
+# LangExtract imports
+import hashlib
+from src.services.langextract_service import (
+    get_langextract_service,
+    LANGEXTRACT_IMPORT_SUCCESS,
+    _IMPORT_ERROR,
+    NormalizedExtractionResult,
+    ExtractedEntity
+)
+from src.config import (
+    LANGEXTRACT_ENABLED,
+    LANGEXTRACT_MODEL,
+    LANGEXTRACT_EXTRACTION_PASSES,
+    LANGEXTRACT_MAX_CHUNK_SIZE,
+    LANGEXTRACT_SCHEMA_VERSION
 )
 
 class InteractiveResearchPage(BasePage):
@@ -274,6 +291,8 @@ class InteractiveResearchPage(BasePage):
             'docsend_content': '',
             'docsend_metadata': {},
             'deep_research_enabled': False,
+            'langextract_enabled': LANGEXTRACT_ENABLED,
+            'extracted_entities_cache': {},
         }
         self.init_session_state(required_keys)
     
@@ -336,6 +355,9 @@ class InteractiveResearchPage(BasePage):
         
         # Deep Research Toggle
         await self._render_deep_research_toggle()
+
+        # Entity Extraction Toggle
+        await self._render_langextract_toggle()
         st.markdown("---")
     
     async def _render_deep_research_toggle(self) -> None:
@@ -435,7 +457,92 @@ class InteractiveResearchPage(BasePage):
             st.warning("🔬 **Deep Research Unavailable**: ODR dependencies not found. Using Classic mode.")
             st.session_state.deep_research_enabled = False
             st.info("📝 **Classic Mode**: Traditional research using direct AI analysis of provided sources")
-    
+
+    async def _render_langextract_toggle(self) -> None:
+        """Render the entity extraction toggle section."""
+        st.markdown("---")
+        st.subheader("🔍 Entity Extraction (Optional)")
+
+        if not LANGEXTRACT_IMPORT_SUCCESS:
+            st.error(f"⚠️ langextract not installed: {_IMPORT_ERROR}")
+            st.caption("Install with: `pip install langextract==0.1.0` and `brew install libmagic` (macOS)")
+            st.session_state.langextract_enabled = False
+            return
+
+        service = await get_langextract_service()
+        available, error = await service.is_available()
+
+        if not available:
+            st.error(f"⚠️ Entity extraction unavailable: {error}")
+            st.session_state.langextract_enabled = False
+            return
+
+        st.session_state.langextract_enabled = st.checkbox(
+            "Enable Entity Extraction",
+            value=st.session_state.get('langextract_enabled', LANGEXTRACT_ENABLED),
+            help="Extract people, organizations, funding rounds, metrics, and more from all sources"
+        )
+
+        if st.session_state.langextract_enabled:
+            st.success("🔍 **Entity Extraction Enabled**: Will extract structured entities from documents, web content, and DocSend presentations.")
+            with st.expander("📊 Entity Types Extracted", expanded=False):
+                st.markdown("""
+                - **People**: Names, titles, organizations, roles
+                - **Organizations**: Companies, investors, partners
+                - **Funding**: Rounds, amounts, stages
+                - **Metrics**: MAU, revenue, growth rates
+                - **Dates**: Launch dates, milestones
+                - **Technology**: Tech stack, platforms
+                - **Risks**: Risk factors and concerns
+                - **Partnerships**: Business alliances
+                """)
+
+    def _get_extraction_cache_key(self, source_type: str, source_name: str, content: str) -> str:
+        """Generate a cache key for entity extraction results."""
+        content_hash = hashlib.sha256(content.encode()).hexdigest()[:12]
+        source_hash = hashlib.sha256(source_name.encode()).hexdigest()[:8]
+        return f"{source_type}:{source_hash}:{content_hash}:{LANGEXTRACT_MODEL}:{LANGEXTRACT_EXTRACTION_PASSES}:{LANGEXTRACT_MAX_CHUNK_SIZE}:{LANGEXTRACT_SCHEMA_VERSION}"
+
+    async def _maybe_extract_entities(self, source_type: str, source_name: str, content: str) -> None:
+        """Extract entities from content if langextract is enabled."""
+        if not st.session_state.get('langextract_enabled') or not content:
+            return
+
+        cache_key = self._get_extraction_cache_key(source_type, source_name, content)
+        if cache_key in st.session_state.extracted_entities_cache:
+            return  # Already cached
+
+        with st.spinner(f"🔍 Extracting entities from {source_name}..."):
+            service = await get_langextract_service()
+            result = await service.extract_entities(content, source_name, source_type)
+            st.session_state.extracted_entities_cache[cache_key] = result
+
+            if result.success:
+                st.success(f"✅ Extracted {result.entity_count} entities from {source_name}")
+            else:
+                st.warning(f"⚠️ Extraction failed for {source_name}: {result.error}")
+
+    async def _build_entity_context(self, include_heading: bool = True) -> str:
+        """Build entity context string for prompt injection.
+
+        Args:
+            include_heading: If True, includes "## Extracted Entities" heading.
+                            Set to False for ODR to avoid double headings.
+        """
+        if not st.session_state.get('langextract_enabled'):
+            return ""
+
+        all_entities = []
+        for result in st.session_state.extracted_entities_cache.values():
+            if result.success:
+                all_entities.extend(result.entities)
+
+        if not all_entities:
+            return ""
+
+        service = await get_langextract_service()
+        return service.create_entity_summary(all_entities, include_heading=include_heading)
+
     async def _check_odr_availability(self) -> bool:
         """Check if ODR is available."""
         try:
@@ -513,7 +620,10 @@ class InteractiveResearchPage(BasePage):
                     if content:
                         processed_content.append({"name": file_data.name, "text": content})
                         self.show_success(f"Successfully processed: {file_data.name}")
-                        
+
+                        # Extract entities if enabled
+                        await self._maybe_extract_entities("document", file_data.name, content)
+
                         # Log successful document processing
                         log_document_processing(
                             user=st.session_state.get('username', 'UNKNOWN'),
@@ -938,15 +1048,18 @@ class InteractiveResearchPage(BasePage):
                 if result.get('success'):
                     docsend_content = result['content']
                     docsend_metadata = result['metadata']
-                    
+
                     # Cache the results
                     st.session_state.docsend_content = docsend_content
                     st.session_state.docsend_metadata = docsend_metadata
-                    
+
+                    # Extract entities from DocSend content
+                    await self._maybe_extract_entities("docsend", url, docsend_content)
+
                     slides_processed = docsend_metadata.get('processed_slides', 0)
                     total_slides = docsend_metadata.get('total_slides', 0)
                     processing_time = docsend_metadata.get('processing_time', 0.0)
-                    
+
                     # Log successful DocSend processing
                     log_docsend_processing(
                         user=st.session_state.get('username', 'UNKNOWN'),
@@ -1147,7 +1260,12 @@ class InteractiveResearchPage(BasePage):
             st.info(f"Scraping {len(urls_to_scrape)} URLs...")
             scraped_data = await self._scrape_urls(urls_to_scrape)
             st.session_state.scraped_web_content = scraped_data
-        
+
+            # Extract entities from scraped web content
+            for item in scraped_data:
+                if item.get('content'):
+                    await self._maybe_extract_entities("web", item.get('url', 'unknown'), item['content'])
+
         # Handle crawling if no specific URLs and crawl URL provided
         crawl_url = st.session_state.get('crawl_start_url', '').strip()
         if crawl_url and not urls_to_scrape:
@@ -1155,6 +1273,11 @@ class InteractiveResearchPage(BasePage):
             st.info(f"Crawling from {crawl_url} (limit: {crawl_limit})...")
             crawled_data = await self._crawl_site(crawl_url, crawl_limit)
             st.session_state.crawled_web_content = crawled_data
+
+            # Extract entities from crawled web content
+            for item in crawled_data:
+                if item.get('content'):
+                    await self._maybe_extract_entities("web", item.get('url', 'unknown'), item['content'])
     
     async def _scrape_urls(self, urls: List[str]) -> List[Dict[str, Any]]:
         """Scrape content from specific URLs."""
@@ -1299,7 +1422,7 @@ class InteractiveResearchPage(BasePage):
             st.markdown("---")
             st.subheader("Generated Report")
             st.markdown(st.session_state.unified_report_content)
-            
+
             st.download_button(
                 label="Download Report",
                 data=st.session_state.unified_report_content,
@@ -1307,7 +1430,22 @@ class InteractiveResearchPage(BasePage):
                 mime="text/markdown",
                 key="download_report_btn"
             )
-    
+
+            # Display extracted entities if available
+            if st.session_state.get('extracted_entities_cache'):
+                with st.expander("🔍 Extracted Entities", expanded=False):
+                    service = await get_langextract_service()
+                    for cache_key, result in st.session_state.extracted_entities_cache.items():
+                        if result.success and result.entities:
+                            # DocSend OCR can be noisy - filter low-confidence entities
+                            min_conf = 0.5 if result.source_type == "docsend" else None
+                            st.markdown(f"**{result.source_name}** ({result.source_type})")
+                            if result.source_type == "docsend":
+                                st.caption("⚠️ OCR-extracted (low-confidence entities filtered)")
+                            # Use per-source summary (no global heading repetition)
+                            st.markdown(service.create_source_entity_summary(result.entities, min_confidence=min_conf))
+                            st.markdown("---")
+
     async def _render_admin_panel(self) -> None:
         """Render comprehensive admin panel if user is admin."""
         if st.session_state.get("role") == "admin":
@@ -1594,16 +1732,20 @@ Streamlit: {st.__version__}
             else:
                 st.info("🔍 **Pure Web Research**: ODR will conduct comprehensive web-based research on your query")
             
+            # Get entity summary for ODR (no heading to avoid duplication)
+            entity_summary = await self._build_entity_context(include_heading=False)
+
             # Generate report
             with st.spinner("🔬 Conducting deep research... This may take several minutes."):
                 start_time = time.time()
-                
+
                 result = await generate_deep_research_report(
                     query=research_query,
                     documents=documents,
                     web_sources=web_sources,
                     docsend_sources=docsend_sources,
-                    config=config
+                    config=config,
+                    entity_summary=entity_summary
                 )
                 
                 processing_time = time.time() - start_time
@@ -1807,11 +1949,16 @@ Streamlit: {st.__version__}
             slides_processed = docsend_metadata.get('processed_slides', 0)
             total_slides = docsend_metadata.get('total_slides', 0)
             docsend_url = docsend_metadata.get('url', 'Unknown')
-            
+
             prompt += f"DocSend Presentation Content:\n"
             prompt += f"--- DocSend Deck: {docsend_url} ({slides_processed}/{total_slides} slides processed) ---\n"
             prompt += f"{docsend_content}\n\n"
-        
+
+        # Add entity context if available
+        entity_context = await self._build_entity_context()
+        if entity_context:
+            prompt += f"{entity_context}\n\n"
+
         prompt += "Based on the above content, please generate a comprehensive research report."
         
         try:

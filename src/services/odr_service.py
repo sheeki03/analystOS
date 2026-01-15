@@ -84,21 +84,23 @@ class ODRService:
         self,
         query: str,
         sources: List[ODRSource],
-        config: Optional[Dict[str, Any]] = None
+        config: Optional[Dict[str, Any]] = None,
+        entity_summary: Optional[str] = None
     ) -> ODRResult:
         """
         Generate research report using ODR.
-        
+
         Args:
             query: Research question/topic
             sources: List of sources to incorporate
             config: Optional configuration (breadth, depth, model, etc.)
-            
+            entity_summary: Optional pre-extracted entities summary
+
         Returns:
             ODRResult with generated content and metadata
         """
         start_time = time.time()
-        
+
         # Check availability
         if not await self.is_available():
             return ODRResult(
@@ -113,12 +115,12 @@ class ODRService:
                 needs_clarification=False,
                 clarification_question=None
             )
-        
+
         try:
             logger.info(f"Starting ODR research for query: {query[:100]}...")
-            
+
             # Prepare ODR input
-            odr_input = await self._prepare_odr_input(query, sources, config)
+            odr_input = await self._prepare_odr_input(query, sources, config, entity_summary)
             
             # Configure ODR
             odr_config = self._create_odr_config(config or {}, sources)
@@ -173,15 +175,20 @@ class ODRService:
         clarification_response: str,
         original_query: str,
         sources: List[ODRSource],
-        config: Optional[Dict[str, Any]] = None
+        config: Optional[Dict[str, Any]] = None,
+        entity_summary: Optional[str] = None
     ) -> ODRResult:
         """Continue research with user's clarification response."""
         try:
             # Combine original query with clarification response
             enhanced_query = f"{original_query}\n\nAdditional Context:\n{clarification_response}"
-            
+
+            # Include entity summary in enhanced query if available
+            if entity_summary:
+                enhanced_query = f"Pre-extracted entities:\n{entity_summary}\n\n{enhanced_query}"
+
             # Continue with the enhanced query
-            return await self.generate_report(enhanced_query, sources, config)
+            return await self.generate_report(enhanced_query, sources, config, entity_summary)
             
         except Exception as e:
             logger.error(f"Failed to continue research with clarification: {e}")
@@ -255,11 +262,12 @@ class ODRService:
         self,
         query: str,
         sources: List[ODRSource],
-        config: Dict[str, Any]
+        config: Dict[str, Any],
+        entity_summary: Optional[str] = None
     ) -> str:
         """
         Prepare input for ODR that incorporates provided sources.
-        
+
         This is the "Input Adapter Layer" that converts our heterogeneous
         sources into a format ODR can work with.
         """
@@ -308,9 +316,13 @@ Please provide the most detailed, thorough, and lengthy analysis possible with e
                     url = source.url or f'Presentation {i}'
                     content = self._truncate_content(source.content, max_chars=3000)
                     input_text += f"\n[Presentation: {url}]\n{content}\n"
-        
+
+        # Include pre-extracted entities if available
+        if entity_summary:
+            input_text += f"\n\n## Pre-Extracted Entities\n{entity_summary}\n"
+
         # Keep it simple - let ODR handle the research approach
-        
+
         return input_text
     
     def _create_odr_config(self, config: Dict[str, Any], sources: List[ODRSource] = None) -> Dict[str, Any]:
@@ -608,18 +620,20 @@ async def generate_deep_research_report(
     documents: List[Dict[str, Any]] = None,
     web_sources: List[Dict[str, Any]] = None,
     docsend_sources: List[Dict[str, Any]] = None,
-    config: Dict[str, Any] = None
+    config: Dict[str, Any] = None,
+    entity_summary: Optional[str] = None
 ) -> ODRResult:
     """
     Convenience function to generate deep research report.
-    
+
     Args:
         query: Research question
         documents: List of document dicts with 'name' and 'content'
         web_sources: List of web source dicts with 'url' and 'content'
         docsend_sources: List of docsend dicts with 'url', 'content', and metadata
         config: Research configuration
-        
+        entity_summary: Optional pre-extracted entities summary
+
     Returns:
         ODRResult with research findings
     """
@@ -657,7 +671,7 @@ async def generate_deep_research_report(
     
     # Get service and generate report
     service = await get_odr_service()
-    return await service.generate_report(query, sources, config)
+    return await service.generate_report(query, sources, config, entity_summary)
 
 
 async def check_odr_availability() -> Tuple[bool, Optional[str]]:

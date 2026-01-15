@@ -115,16 +115,20 @@ mcp>=1.9.4
 # ===== SPECIALIZED LIBRARIES =====
 kitchenai-whisk
 
+# ===== ENTITY EXTRACTION =====
+# Pin to specific version to avoid API drift (prompt_description vs instructions, etc.)
+langextract==0.1.0
+
 # ===== TESTING =====
 pytest>=7.4.0
 
 # ===== SYSTEM DEPENDENCIES NOTES =====
-# 
+#
 # The following system dependencies are required:
 #
 # BROWSERS (at least one required):
 # - Chrome/Chromium (recommended for DocSend)
-# - Firefox 
+# - Firefox
 # - Microsoft Edge
 #
 # OCR ENGINE:
@@ -133,6 +137,12 @@ pytest>=7.4.0
 # - Linux: sudo apt-get install tesseract-ocr (Ubuntu/Debian)
 #          sudo yum install tesseract (CentOS/RHEL)
 #
+# LIBMAGIC (required for langextract entity extraction):
+# - macOS: brew install libmagic
+# - Windows: pip install python-magic-bin (includes bundled libmagic)
+# - Linux: sudo apt-get install libmagic1 (Ubuntu/Debian)
+#          sudo yum install file-libs (CentOS/RHEL)
+#
 # PLAYWRIGHT BROWSERS (for web scraping):
 # After pip install, run: playwright install
 #
@@ -140,3 +150,23 @@ pytest>=7.4.0
 # - macOS (Intel/Apple Silicon)
 # - Windows 10/11
 # - Linux (Ubuntu, CentOS, etc.)
+#
+# ===== QUICK START =====
+#
+# 1. Create virtual environment:
+#    python3 -m venv venv && source venv/bin/activate
+#
+# 2. Install system dependencies (macOS example):
+#    brew install tesseract libmagic
+#
+# 3. Install Python packages:
+#    pip install -r requirements.txt
+#
+# 4. Install Playwright browsers:
+#    playwright install
+#
+# 5. Copy .env.example to .env and configure API keys:
+#    cp .env.example .env
+#
+# 6. Run the app:
+#    streamlit run main.py
