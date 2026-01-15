@@ -139,6 +139,9 @@ class LangExtractService:
             chunk_size: Target chunk size
             overlap: Characters of overlap between chunks to catch boundary-spanning entities
         """
+        # Guard against invalid chunk_size
+        if chunk_size <= 0:
+            chunk_size = 1
         if len(text) <= chunk_size:
             return [(0, len(text), text)]
 
