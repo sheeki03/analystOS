@@ -15,8 +15,12 @@ from src.jobs.upload_job import upload_job
 from src.jobs.scrape_job import scrape_job
 from src.jobs.generate_job import generate_job
 
+# Note: extract_entities_job is not yet implemented
+# When implemented, add: from src.jobs.extract_entities_job import extract_entities_job
+
 __all__ = [
     "upload_job",
     "scrape_job",
     "generate_job",
+    # "extract_entities_job",  # TODO: implement
 ]

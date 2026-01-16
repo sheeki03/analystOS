@@ -132,6 +132,8 @@ async def _load_sources(user_id: str, source_ids: List[str]) -> List[Dict[str, s
             })
 
     logger.debug(f"Loaded {len(sources)} source files for generation")
+    if not sources:
+        raise FileNotFoundError(f"No sources found for user '{user_id}' in {user_dir}")
     return sources
 
 
@@ -243,5 +245,5 @@ Please check your OPENROUTER_API_KEY configuration and retry.
 ## Source Content Preview
 The following sources were provided for analysis:
 
-{"---".join(s['content'][:500] + '...' for s in sources[:3])}
+{"\n\n---\n\n".join(s['content'][:500] + '...' for s in sources[:3])}
 """

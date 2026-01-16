@@ -292,7 +292,7 @@ async def login(
     access_token, expires = create_access_token(
         user_id=user["user_id"],
         username=user["username"],
-        role=user["role"],
+        role=user.get("role", "user"),
     )
 
     # Create refresh token with new family
@@ -365,7 +365,7 @@ async def refresh(
 
     # Get user info
     user = None
-    for u in _users.values():
+    for u in list(_users.values()):
         if u["user_id"] == validation.user_id:
             user = u
             break
@@ -400,7 +400,7 @@ async def refresh(
     access_token, expires = create_access_token(
         user_id=user["user_id"],
         username=user["username"],
-        role=user["role"],
+        role=user.get("role", "user"),
     )
 
     # Set new refresh token cookie
@@ -456,7 +456,7 @@ async def get_me(
     """
     # Find user details
     user = None
-    for u in _users.values():
+    for u in list(_users.values()):
         if u["user_id"] == current_user.sub:
             user = u
             break
@@ -471,7 +471,7 @@ async def get_me(
         user_id=user["user_id"],
         username=user["username"],
         email=user.get("email"),
-        role=user["role"],
+        role=user.get("role", "user"),
         created_at=user.get("created_at"),
     )
 

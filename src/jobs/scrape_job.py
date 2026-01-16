@@ -203,5 +203,8 @@ def _url_to_filename(url: str) -> str:
     name = f"{parsed.netloc}{parsed.path}"
     # Remove unsafe characters
     name = re.sub(r"[^a-zA-Z0-9_-]", "_", name)
-    # Limit length
-    return name[:50]
+    # Limit length and provide fallback for empty names
+    name = name[:50]
+    if not name:
+        name = "unknown"
+    return name
