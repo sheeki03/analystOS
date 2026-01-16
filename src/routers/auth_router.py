@@ -110,7 +110,11 @@ def get_user_by_username(username: str) -> Optional[dict]:
 
 def verify_password(plain_password: str, password_hash: str) -> bool:
     """Verify password against hash."""
-    return bcrypt.checkpw(plain_password.encode(), password_hash.encode())
+    try:
+        return bcrypt.checkpw(plain_password.encode(), password_hash.encode())
+    except ValueError:
+        # Malformed hash
+        return False
 
 
 # ============================================================================
@@ -371,6 +375,14 @@ async def refresh(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found",
+        )
+
+    # Deny refresh for disabled users
+    if not user.get("is_active", True):
+        clear_refresh_cookie(response)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User is disabled",
         )
 
     # Rotate refresh token

@@ -202,9 +202,9 @@ async def detailed_health_check() -> dict:
         try:
             import redis.asyncio as aioredis
             redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
-            redis_client = await aioredis.from_url(redis_url)
+            redis_client = aioredis.from_url(redis_url)  # Sync factory, returns client
             await redis_client.ping()
-            await redis_client.close()
+            await redis_client.aclose()
             services["redis"] = "healthy"
         except Exception as e:
             services["redis"] = f"unhealthy: {e}"

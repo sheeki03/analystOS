@@ -66,7 +66,7 @@ class JobListItem(BaseModel):
     job_id: str
     job_type: JobType
     status: JobStatus
-    progress: int
+    progress: int = Field(..., ge=0, le=100)
     created_at: datetime
 
 

@@ -150,6 +150,7 @@ async def _scrape_url(url: str) -> str:
 async def _scrape_with_firecrawl(url: str) -> str:
     """Scrape using FireCrawl API."""
     import os
+    import asyncio
 
     api_key = os.getenv("FIRECRAWL_API_KEY")
     if not api_key:
@@ -158,10 +159,13 @@ async def _scrape_with_firecrawl(url: str) -> str:
     from firecrawl import FirecrawlApp
 
     app = FirecrawlApp(api_key=api_key)
-    result = app.scrape_url(url, params={"formats": ["markdown"]})
+    # Run sync call in thread to avoid blocking event loop
+    result = await asyncio.to_thread(app.scrape_url, url, {"formats": ["markdown"]})
 
-    if result and "markdown" in result:
-        return result["markdown"]
+    # Check for valid markdown content (must be a string)
+    markdown = result.get("markdown") if isinstance(result, dict) else None
+    if isinstance(markdown, str):
+        return markdown
 
     raise RuntimeError("FireCrawl returned no content")
 

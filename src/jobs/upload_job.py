@@ -63,6 +63,10 @@ async def upload_job(
         # Process each file
         processed_files = []
 
+        # Validate input lengths match
+        if len(filenames) != len(file_contents):
+            raise ValueError(f"filenames and file_contents length mismatch: {len(filenames)} vs {len(file_contents)}")
+
         for i, (filename, content) in enumerate(zip(filenames, file_contents)):
             logger.debug(f"Processing file {i+1}/{len(filenames)}: {filename}")
 
@@ -131,14 +135,11 @@ async def _extract_pdf_text(content: bytes) -> str:
     try:
         import fitz  # PyMuPDF
 
-        doc = fitz.open(stream=content, filetype="pdf")
-        text_parts = []
-
-        for page in doc:
-            text_parts.append(page.get_text())
-
-        doc.close()
-        return "\n\n".join(text_parts)
+        with fitz.open(stream=content, filetype="pdf") as doc:
+            text_parts = []
+            for page in doc:
+                text_parts.append(page.get_text())
+            return "\n\n".join(text_parts)
 
     except ImportError:
         logger.warning("PyMuPDF not installed, falling back to basic extraction")
@@ -163,8 +164,18 @@ async def _extract_docx_text(content: bytes) -> str:
         return "\n\n".join(text_parts)
 
     except ImportError:
-        logger.warning("python-docx not installed, falling back to basic extraction")
-        return content.decode("utf-8", errors="replace")
+        logger.warning("python-docx not installed, falling back to XML extraction")
+        # DOCX is a ZIP of XML files - extract text from word/document.xml
+        try:
+            from io import BytesIO
+            import zipfile
+            from xml.etree import ElementTree as ET
+
+            with zipfile.ZipFile(BytesIO(content)) as zf:
+                xml_content = zf.read("word/document.xml")
+            return "".join(ET.fromstring(xml_content).itertext())
+        except Exception:
+            return ""
     except Exception as e:
         logger.error(f"DOCX extraction failed: {e}")
         return ""
