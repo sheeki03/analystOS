@@ -145,4 +145,12 @@ DEFAULT_PROMPTS: Dict[str, str] = {
 USERS_CONFIG_PATH = CONFIG_DIR / "users.yaml"
 
 # Ensure the config directory exists (redundant if checked above, but safe)
-CONFIG_DIR.mkdir(parents=True, exist_ok=True) 
+CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+
+# ===== LangExtract Configuration =====
+LANGEXTRACT_ENABLED = os.getenv("LANGEXTRACT_ENABLED", "false").lower() == "true"
+LANGEXTRACT_MODEL = os.getenv("LANGEXTRACT_MODEL", "openai/gpt-4o")
+LANGEXTRACT_EXTRACTION_PASSES = int(os.getenv("LANGEXTRACT_EXTRACTION_PASSES", "2"))
+LANGEXTRACT_MAX_CONCURRENT = int(os.getenv("LANGEXTRACT_MAX_CONCURRENT", "3"))
+LANGEXTRACT_MAX_CHUNK_SIZE = int(os.getenv("LANGEXTRACT_MAX_CHUNK_SIZE", "50000"))
+LANGEXTRACT_SCHEMA_VERSION = "v1" 

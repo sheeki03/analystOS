@@ -56,6 +56,13 @@ A production-ready research automation platform powered by OpenRouter (50+ AI mo
 - **Free Tier Models**: Qwen3, DeepSeek R1T Chimera for cost-effective research
 - **Custom Research Prompts**: Specialized prompts for due diligence and analysis
 
+### 🔍 **Entity Extraction (LangExtract)**
+- **Structured Extraction**: Automatically extract people, organizations, funding rounds, metrics, and more
+- **Multi-Source Support**: Extract from documents, web content, and DocSend presentations
+- **Source Grounding**: All entities are linked to their source documents
+- **Smart Caching**: Results are cached to avoid re-extraction on unchanged content
+- **AI-Enhanced Reports**: Extracted entities are automatically included in research prompts
+
 ## 🏗️ Architecture
 
 ### **Core Components**
@@ -234,6 +241,43 @@ export TAVILY_API_KEY=your_tavily_key_here
 - **Max Tool Calls (8-15)**: Web searches per iteration
 
 **Ultra-Comprehensive Mode**: Breadth=10, Depth=6, Tools=12 (720 total operations)
+
+### **Entity Extraction (LangExtract) Setup**
+
+Entity extraction automatically identifies people, organizations, funding rounds, metrics, and more from your research sources:
+
+```bash
+# Install langextract (pinned version for API stability)
+pip install langextract==0.1.0
+
+# Install libmagic (required system dependency)
+# macOS:
+brew install libmagic
+
+# Ubuntu/Debian:
+sudo apt-get install libmagic1
+
+# Windows:
+pip install python-magic-bin  # Includes bundled libmagic
+```
+
+**Enable in .env:**
+```env
+LANGEXTRACT_ENABLED=true
+LANGEXTRACT_MODEL=openai/gpt-4o
+LANGEXTRACT_EXTRACTION_PASSES=2
+LANGEXTRACT_MAX_CONCURRENT=3
+LANGEXTRACT_MAX_CHUNK_SIZE=50000
+```
+
+**Entity Types Extracted:**
+- **People**: Names, titles, organizations, roles
+- **Organizations**: Companies, investors, partners, their roles
+- **Funding**: Rounds (Seed, Series A/B/C), amounts, dates
+- **Metrics**: MAU, revenue, growth rates, valuations
+- **Technology**: Tech stack, platforms, categories
+- **Risk Factors**: Identified risks with severity
+- **Partnerships**: Business alliances and collaborations
 
 ### **Model Configuration**
 
