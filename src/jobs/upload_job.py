@@ -142,8 +142,8 @@ async def _extract_pdf_text(content: bytes) -> str:
             return "\n\n".join(text_parts)
 
     except ImportError:
-        logger.warning("PyMuPDF not installed, falling back to basic extraction")
-        return content.decode("utf-8", errors="replace")
+        logger.warning("PyMuPDF not installed; unable to extract PDF text")
+        return ""
     except Exception as e:
         logger.error(f"PDF extraction failed: {e}")
         return ""

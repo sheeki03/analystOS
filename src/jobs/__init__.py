@@ -8,7 +8,6 @@ Job functions:
 - upload_job: Process uploaded documents
 - scrape_job: Scrape URLs for content
 - generate_job: Generate research reports
-- extract_entities_job: Extract entities from sources
 """
 
 from src.jobs.upload_job import upload_job
