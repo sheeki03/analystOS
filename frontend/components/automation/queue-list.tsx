@@ -17,7 +17,7 @@ export function QueueList({ queue, onTrigger }: QueueListProps) {
   return (
     <div className="space-y-3">
       {queue.map((item) => (
-        <QueueItemCard key={item.id} item={item} onTrigger={() => onTrigger(item.id)} />
+        <QueueItemCard key={item.item_id} item={item} onTrigger={() => onTrigger(item.item_id)} />
       ))}
     </div>
   )
@@ -106,7 +106,7 @@ function QueueItemCard({ item, onTrigger }: QueueItemCardProps) {
       </div>
 
       <div className="flex items-center gap-3">
-        <Badge variant={badgeVariant[item.status]}>{statusMap[item.status]}</Badge>
+        <Badge variant={badgeVariant[item.status] ?? 'secondary'}>{statusMap[item.status] ?? 'Pending'}</Badge>
 
         {(item.status === 'pending' || item.status === 'failed') && (
           <Button

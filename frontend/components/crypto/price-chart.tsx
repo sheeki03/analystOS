@@ -203,6 +203,7 @@ function formatChartDate(timestamp: number, range: TimeRange): string {
 
 function formatCompactCurrency(value: number): string {
   if (value >= 1000) return '$' + (value / 1000).toFixed(1) + 'k'
+  if (value < 1) return '$' + value.toFixed(6)
   return '$' + value.toFixed(0)
 }
 

@@ -44,11 +44,7 @@ async function proxyRequest(request: NextRequest, params: { path: string[] }) {
         // Handle empty body case
         const text = await request.text()
         if (text) {
-          try {
-            body = text
-          } catch {
-            body = null
-          }
+          body = text
         }
       } else if (contentType?.includes('multipart/form-data')) {
         // For file uploads, pass through the FormData

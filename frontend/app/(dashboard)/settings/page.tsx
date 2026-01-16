@@ -423,9 +423,11 @@ function ThemeOption({
   )
 }
 
-function ColorSwatch({ color, isActive }: { color: string; isActive?: boolean }) {
+function ColorSwatch({ color, isActive, onClick }: { color: string; isActive?: boolean; onClick?: () => void }) {
   return (
     <button
+      type="button"
+      onClick={onClick}
       className={cn(
         'w-8 h-8 rounded-full transition-transform',
         isActive && 'ring-2 ring-offset-2 ring-offset-bg-primary ring-white scale-110'

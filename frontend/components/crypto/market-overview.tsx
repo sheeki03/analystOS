@@ -72,7 +72,7 @@ export function MarketOverview({ data }: MarketOverviewProps) {
               isMarketUp ? 'bg-accent-success' : 'bg-accent-danger'
             )}
             style={{
-              width: `${50 + (isMarketUp ? Math.abs(data.market_cap_change_24h) : -Math.abs(data.market_cap_change_24h)) * 5}%`,
+              width: `${Math.min(100, Math.max(0, 50 + (isMarketUp ? Math.abs(data.market_cap_change_24h) : -Math.abs(data.market_cap_change_24h)) * 5))}%`,
             }}
           />
         </div>

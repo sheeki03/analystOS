@@ -149,6 +149,7 @@ export interface TrendingCoin {
   market_cap_rank?: number
   price_btc: number
   score: number
+  thumb?: string
 }
 
 export interface SearchResult {
