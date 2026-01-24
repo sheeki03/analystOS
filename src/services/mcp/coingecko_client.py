@@ -28,6 +28,15 @@ from .exceptions import (
 
 logger = logging.getLogger(__name__)
 
+# SECURITY: Whitelist of allowed commands for subprocess execution
+# Only these commands can be spawned as MCP processes
+ALLOWED_MCP_COMMANDS = frozenset({
+    'npx',      # Node package executor
+    'node',     # Node.js runtime
+    'python',   # Python interpreter
+    'python3',  # Python 3 interpreter
+})
+
 class CoinGeckoMCPClient:
     """
     CoinGecko MCP Client with REST API fallback.
@@ -89,12 +98,26 @@ class CoinGeckoMCPClient:
         """Attempt to connect to MCP server using mcp-remote."""
         try:
             coingecko_config = self.config.coingecko_config
-            
-            # Start mcp-remote process
-            cmd = [coingecko_config['command']] + coingecko_config['args']
-            
+
+            # Get command from config
+            command = coingecko_config['command']
+
+            # SECURITY: Validate command against whitelist before execution
+            # Extract base command name (handle full paths like /usr/bin/npx)
+            import os
+            base_command = os.path.basename(command)
+            if base_command not in ALLOWED_MCP_COMMANDS:
+                logger.error(
+                    f"SECURITY: Blocked execution of non-whitelisted command '{command}'. "
+                    f"Allowed commands: {', '.join(sorted(ALLOWED_MCP_COMMANDS))}"
+                )
+                return False
+
+            # Build command array
+            cmd = [command] + coingecko_config['args']
+
             logger.info(f"Starting MCP process: {' '.join(cmd)}")
-            
+
             # Start the MCP process
             self.mcp_process = subprocess.Popen(
                 cmd,
@@ -1126,6 +1149,71 @@ class CoinGeckoMCPClient:
         except Exception as e:
             logger.error(f"Web news search failed: {e}")
             return []
+
+    async def get_coins_markets(
+        self,
+        vs_currency: str = "usd",
+        per_page: int = 100,
+        page: int = 1,
+        order: str = "market_cap_desc"
+    ) -> List[CoinData]:
+        """
+        Get list of coins with market data (price, market cap, volume).
+
+        Uses CoinGecko /coins/markets endpoint.
+
+        Args:
+            vs_currency: Target currency (default: usd)
+            per_page: Results per page, max 250 (default: 100)
+            page: Page number (default: 1)
+            order: Sort order (default: market_cap_desc)
+
+        Returns:
+            List of CoinData objects
+        """
+        await self._check_rate_limit()
+
+        url = f"{self.config.fallback_endpoints['coingecko_rest']}/coins/markets"
+        params = {
+            'vs_currency': vs_currency,
+            'order': order,
+            'per_page': min(per_page, 250),  # CoinGecko max is 250
+            'page': page,
+            'sparkline': 'false'
+        }
+
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, params=params, timeout=15) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        coins = []
+                        for coin in data:
+                            coins.append(CoinData(
+                                id=coin.get('id', ''),
+                                symbol=coin.get('symbol', ''),
+                                name=coin.get('name', ''),
+                                image=coin.get('image'),
+                                current_price=coin.get('current_price'),
+                                market_cap=coin.get('market_cap'),
+                                market_cap_rank=coin.get('market_cap_rank'),
+                                total_volume=coin.get('total_volume'),
+                                high_24h=coin.get('high_24h'),
+                                low_24h=coin.get('low_24h'),
+                                price_change_24h=coin.get('price_change_24h'),
+                                price_change_percentage_24h=coin.get('price_change_percentage_24h'),
+                                circulating_supply=coin.get('circulating_supply'),
+                                total_supply=coin.get('total_supply'),
+                                max_supply=coin.get('max_supply'),
+                                ath=coin.get('ath'),
+                                atl=coin.get('atl'),
+                            ))
+                        return coins
+                    else:
+                        raise MCPInvalidResponseError(f"REST API error: {response.status}")
+        except Exception as e:
+            logger.error(f"Failed to fetch coins markets: {e}")
+            raise
 
     def _get_comprehensive_coin_mapping(self) -> Dict[str, str]:
         """Get comprehensive mapping of coin symbols/names to CoinGecko IDs."""

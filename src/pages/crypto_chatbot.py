@@ -200,12 +200,12 @@ class CryptoChatbotPage(BasePage):
     
     def _format_coin_price_response(self, data: Dict[str, Any], meta: Dict[str, Any]) -> Dict[str, Any]:
         """Format coin price response for UI."""
-        name = data.get("name", "Unknown")
-        symbol = data.get("symbol", "").upper()
-        price = data.get("price", 0)
-        change_24h = data.get("change_24h", 0)
-        market_cap = data.get("market_cap", 0)
-        
+        name = data.get("name") or "Unknown"
+        symbol = (data.get("symbol") or "").upper()
+        price = data.get("price") or 0
+        change_24h = data.get("change_24h") or 0
+        market_cap = data.get("market_cap") or 0
+
         change_emoji = "🟢" if change_24h >= 0 else "🔴"
         content = f"💰 **{name} ({symbol})**\n\n"
         content += f"**Current Price:** ${price:,.4f}\n"
@@ -242,8 +242,8 @@ class CryptoChatbotPage(BasePage):
             name = coin.get("name", "Unknown")
             symbol = coin.get("symbol", "").upper()
             rank = coin.get("market_cap_rank", "N/A")
-            change = coin.get("price_change_percentage_24h", 0)
-            
+            change = coin.get("price_change_percentage_24h") or 0
+
             change_emoji = "🟢" if change >= 0 else "🔴"
             content += f"**{i}. {name} ({symbol})**\n"
             content += f"   • Rank: #{rank}\n"
@@ -297,11 +297,11 @@ class CryptoChatbotPage(BasePage):
     
     def _format_market_overview_response(self, data: Dict[str, Any], meta: Dict[str, Any]) -> Dict[str, Any]:
         """Format market overview response for UI."""
-        market_cap = data.get("total_market_cap_usd", 0)
-        volume = data.get("total_volume_usd", 0)
-        btc_dom = data.get("btc_dominance", 0)
-        change_24h = data.get("market_cap_change_24h", 0)
-        active_cryptos = data.get("active_cryptocurrencies", 0)
+        market_cap = data.get("total_market_cap_usd") or 0
+        volume = data.get("total_volume_usd") or 0
+        btc_dom = data.get("btc_dominance") or 0
+        change_24h = data.get("market_cap_change_24h") or 0
+        active_cryptos = data.get("active_cryptocurrencies") or 0
         
         content = f"📊 **Global Cryptocurrency Market**\n\n"
         content += f"💰 **Total Market Cap:** ${market_cap:,.0f}\n"
@@ -334,18 +334,18 @@ class CryptoChatbotPage(BasePage):
     
     def _format_historical_response(self, data: Dict[str, Any], meta: Dict[str, Any]) -> Dict[str, Any]:
         """Format historical data response for UI."""
-        coin_id = data.get("coin_id", "")
-        days = data.get("days", 0)
-        prices = data.get("prices", [])
-        total_points = data.get("total_points", 0)
-        
+        coin_id = data.get("coin_id") or ""
+        days = data.get("days") or 0
+        prices = data.get("prices") or []
+        total_points = data.get("total_points") or 0
+
         if not prices:
             content = f"📈 **No historical data found for {coin_id}**"
         else:
-            first_price = prices[0].get("price", 0)
-            last_price = prices[-1].get("price", 0) if len(prices) > 1 else first_price
-            
-            if first_price > 0:
+            first_price = prices[0].get("price") or 0
+            last_price = prices[-1].get("price") or 0 if len(prices) > 1 else first_price
+
+            if first_price and first_price > 0:
                 change_pct = ((last_price - first_price) / first_price) * 100
             else:
                 change_pct = 0
