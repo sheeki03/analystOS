@@ -42,6 +42,11 @@ brotli>=1.1.0  # For Brotli compression support in sitemaps
 pandas>=2.1.0
 numpy>=1.24.0
 
+# ===== FINANCIAL DATA (OpenBB Platform) =====
+# OpenBB Platform for unified equity data access (prices, fundamentals, filings, news)
+# Requires provider API keys to be set in environment (FMP_API_KEY, etc.)
+openbb>=4.5.0
+
 # ===== MCP & CRYPTO ANALYSIS =====
 # MCP (Model Context Protocol) Dependencies
 aiofiles>=23.2.1  # Already included above
@@ -121,6 +126,10 @@ langextract==0.1.0
 
 # ===== TESTING =====
 pytest>=7.4.0
+pytest-asyncio>=0.23.0
+
+# ===== E2E BROWSER TESTING =====
+browser-use>=0.11.4
 
 # ===== SYSTEM DEPENDENCIES NOTES =====
 #
@@ -153,8 +162,8 @@ pytest>=7.4.0
 #
 # ===== QUICK START =====
 #
-# 1. Create virtual environment:
-#    python3 -m venv venv && source venv/bin/activate
+# 1. Create virtual environment (Python 3.13 required for OpenBB):
+#    python3.13 -m venv venv && source venv/bin/activate
 #
 # 2. Install system dependencies (macOS example):
 #    brew install tesseract libmagic
