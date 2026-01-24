@@ -287,10 +287,11 @@ Supported via OpenRouter:
 
 | Provider | Models |
 |----------|--------|
-| OpenAI | GPT-4o, GPT-4 Turbo |
-| Anthropic | Claude 3.5 Sonnet, Claude 3 Opus |
-| Google | Gemini 1.5 Pro, Gemini 1.5 Flash |
-| Free Tier | Qwen3, DeepSeek R1T Chimera |
+| OpenAI | GPT-5.2, GPT-5.2 Pro |
+| Anthropic | Claude Sonnet 4, Claude Sonnet 4.5, Claude Opus 4.5 |
+| Google | Gemini 3, Gemini 2.5 Pro, Gemini 2.5 Flash |
+| Free Tier | Nemotron 3 Nano 30B, Qwen3 30B/235B, DeepSeek R1T Chimera, Molmo 2 8B Vision |
+| Image Gen | Seedream 4.5 |
 
 ---
 
