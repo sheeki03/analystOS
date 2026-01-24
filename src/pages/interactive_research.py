@@ -26,7 +26,7 @@ from src.pages.base_page import BasePage
 from src.openrouter import OpenRouterClient
 from src.firecrawl_client import FirecrawlClient
 from src.config import OPENROUTER_PRIMARY_MODEL, AI_MODEL_OPTIONS
-from src.core.scanner_utils import discover_sitemap_urls
+from src.core.scanner_utils import discover_urls_via_firecrawl
 from src.core.rag_utils import (
     get_embedding_model,
     split_text_into_chunks,
@@ -121,17 +121,18 @@ class InteractiveResearchPage(BasePage):
         # Debug: Show current role for troubleshooting
         current_role = st.session_state.get("role", "NOT_SET")
         current_user = st.session_state.get("username", "NOT_SET")
-        
-        # Always show debug info for now
-        with st.expander("🔧 Debug Info", expanded=False):
-            st.write(f"**Current User:** {current_user}")
-            st.write(f"**Current Role:** {current_role}")
-            st.write(f"**Session State Keys:** {list(st.session_state.keys())}")
-            
-            # Show authentication status
-            auth_status = "✅ Authenticated" if st.session_state.get("authenticated") else "❌ Not Authenticated"
-            st.write(f"**Auth Status:** {auth_status}")
-        
+
+        # SECURITY: Only show debug info to admin users
+        if st.session_state.get("role") == "admin":
+            with st.expander("🔧 Debug Info (Admin Only)", expanded=False):
+                st.write(f"**Current User:** {current_user}")
+                st.write(f"**Current Role:** {current_role}")
+                st.write(f"**Session State Keys:** {list(st.session_state.keys())}")
+
+                # Show authentication status
+                auth_status = "✅ Authenticated" if st.session_state.get("authenticated") else "❌ Not Authenticated"
+                st.write(f"**Auth Status:** {auth_status}")
+
         # Admin panel (if admin)
         if st.session_state.get("role") == "admin":
             await self._render_admin_panel()
@@ -188,13 +189,11 @@ class InteractiveResearchPage(BasePage):
                                 self._resume_session(session)
                         
                         with col2:
-                            st.markdown(f"<small>{time_ago}</small>", unsafe_allow_html=True)
-                        
+                            # SECURITY: Use caption instead of unsafe HTML
+                            st.caption(time_ago)
+
                         # Show session details
-                        st.markdown(
-                            f"<small>💬 {session['message_count']} messages</small>", 
-                            unsafe_allow_html=True
-                        )
+                        st.caption(f"💬 {session['message_count']} messages")
                         st.markdown("---")
                 
                 # Refresh button
@@ -389,11 +388,12 @@ class InteractiveResearchPage(BasePage):
             deep_research_enabled = (research_mode == "Deep Research (ODR)")
             st.session_state.deep_research_enabled = deep_research_enabled
             
-            # Debug info
-            if st.checkbox("Show Debug Info", key="debug_research_mode"):
-                st.write(f"Current mode: {research_mode}")
-                st.write(f"Session state enabled: {st.session_state.deep_research_enabled}")
-                st.write(f"Radio index: {current_index}")
+            # SECURITY: Debug info only for admin users
+            if st.session_state.get("role") == "admin":
+                if st.checkbox("Show Debug Info", key="debug_research_mode"):
+                    st.write(f"Current mode: {research_mode}")
+                    st.write(f"Session state enabled: {st.session_state.deep_research_enabled}")
+                    st.write(f"Radio index: {current_index}")
             
             if deep_research_enabled:
                 st.success("🔬 **Deep Research Mode**: Using LangChain's Open Deep Research framework for advanced multi-agent research with web search and citations.")
@@ -827,8 +827,8 @@ class InteractiveResearchPage(BasePage):
         )
         
         try:
-            with st.spinner(f"Scanning {site_url} for sitemap URLs..."):
-                discovered_urls = await discover_sitemap_urls(site_url)
+            with st.spinner(f"Discovering URLs via Firecrawl for {site_url}..."):
+                discovered_urls = await discover_urls_via_firecrawl(site_url)
             
             st.session_state.discovered_sitemap_urls = discovered_urls
             st.session_state.sitemap_scan_completed = True

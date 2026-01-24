@@ -9,6 +9,7 @@ import xml.etree.ElementTree as ET
 import asyncio
 import random
 import time
+import os
 
 # It's good practice to configure logging at the application level.
 # For this module, we'll get a logger instance.
@@ -729,6 +730,77 @@ async def discover_sitemap_urls(initial_url: str) -> List[str]:
     final_url_list = sorted(list(all_discovered_page_urls))
     logger.info(f"Discovered {len(final_url_list)} unique page URLs for {target_domain}.")
     return final_url_list
+
+async def discover_urls_via_firecrawl(
+    initial_url: str,
+    search: Optional[str] = None,
+    limit: int = 5000,
+    include_subdomains: bool = False
+) -> List[str]:
+    """
+    Discover all URLs on a website using Firecrawl's /v1/map endpoint.
+
+    This is the preferred method over the httpx-based discover_sitemap_urls()
+    because Firecrawl handles:
+    - Bot protection bypass (Cloudflare, etc.)
+    - JavaScript rendering
+    - More comprehensive URL discovery
+
+    Args:
+        initial_url: The base URL of the website (e.g., "https://solana.com")
+        search: Optional search term to filter discovered URLs
+        limit: Maximum number of URLs to return (default 5000)
+        include_subdomains: If True, include URLs from subdomains
+
+    Returns:
+        A list of discovered URLs. Falls back to httpx-based discovery
+        if Firecrawl is not configured or fails.
+    """
+    # Check if Firecrawl is properly configured
+    firecrawl_api_key = os.getenv("FIRECRAWL_API_KEY")
+    firecrawl_api_url = os.getenv("FIRECRAWL_API_URL")
+
+    if not firecrawl_api_key or firecrawl_api_key.strip() == "":
+        logger.warning("FIRECRAWL_API_KEY not set. Falling back to httpx-based sitemap discovery.")
+        return await discover_sitemap_urls(initial_url)
+
+    # Ensure we have a proper URL with scheme
+    if not initial_url:
+        logger.warning("discover_urls_via_firecrawl called with no initial_url")
+        return []
+
+    parsed_url = urlparse(initial_url)
+    if not parsed_url.scheme:
+        initial_url = f"https://{initial_url}"
+
+    logger.info(f"Discovering URLs via Firecrawl map for: {initial_url}")
+
+    try:
+        # Import here to avoid circular imports
+        from src.firecrawl_client import FirecrawlClient
+
+        client = FirecrawlClient(
+            base_url=firecrawl_api_url
+        )
+
+        urls = await client.map_url(
+            url=initial_url,
+            search=search,
+            limit=limit,
+            include_subdomains=include_subdomains
+        )
+
+        if urls:
+            logger.info(f"Firecrawl map discovered {len(urls)} URLs for {initial_url}")
+            return urls
+        else:
+            logger.warning(f"Firecrawl map returned no URLs for {initial_url}. Falling back to httpx-based discovery.")
+            return await discover_sitemap_urls(initial_url)
+
+    except Exception as e:
+        logger.error(f"Firecrawl map failed for {initial_url}: {str(e)}. Falling back to httpx-based discovery.")
+        return await discover_sitemap_urls(initial_url)
+
 
 # Example usage (for testing purposes, normally called from elsewhere)
 if __name__ == '__main__':

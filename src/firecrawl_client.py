@@ -354,6 +354,107 @@ class FirecrawlClient:
         print(f"DEBUG: Final result being returned for {url}: {final_result}") # Log final return value
         return final_result
 
+    async def map_url(
+        self,
+        url: str,
+        search: Optional[str] = None,
+        ignore_sitemap: bool = False,
+        include_subdomains: bool = False,
+        limit: int = 5000
+    ) -> List[str]:
+        """
+        Discover all URLs on a website using Firecrawl's /v1/map endpoint.
+
+        This is more reliable than parsing robots.txt and sitemaps manually
+        because Firecrawl handles bot protection and JavaScript rendering.
+
+        Args:
+            url: The base URL to map (e.g., "https://solana.com")
+            search: Optional search term to filter URLs
+            ignore_sitemap: If True, don't use sitemap for discovery
+            include_subdomains: If True, include URLs from subdomains
+            limit: Maximum number of URLs to return (default 5000)
+
+        Returns:
+            List of discovered URLs
+        """
+        if not self.validate_url(url):
+            print(f"DEBUG: Invalid URL for map: {url}")
+            return []
+
+        headers = {
+            "Content-Type": "application/json",
+            **({"Authorization": f"Bearer {self.api_key}"} if self.api_key else {})
+        }
+
+        payload = {
+            "url": url,
+            "limit": limit,
+            "ignoreSitemap": ignore_sitemap,
+            "includeSubdomains": include_subdomains
+        }
+
+        if search:
+            payload["search"] = search
+
+        map_endpoint = f"{self.base_url}/v1/map"
+
+        try:
+            # Create SSL context with fallback handling
+            ssl_context = None
+            try:
+                ssl_context = ssl.create_default_context(cafile=certifi.where())
+            except Exception as ssl_error:
+                print(f"Warning: Could not create SSL context with certifi: {ssl_error}. Using default.")
+                try:
+                    ssl_context = ssl.create_default_context()
+                except Exception as fallback_error:
+                    print(f"Warning: Could not create default SSL context: {fallback_error}. Disabling SSL verification.")
+                    ssl_context = False
+
+            connector = aiohttp.TCPConnector(ssl=ssl_context)
+            async with aiohttp.ClientSession(connector=connector) as session:
+                print(f"DEBUG: POSTing to {map_endpoint} for URL: {url}")
+                async with session.post(
+                    map_endpoint,
+                    json=payload,
+                    headers=headers,
+                    timeout=aiohttp.ClientTimeout(total=60)  # Map can take longer
+                ) as response:
+
+                    if response.status != 200:
+                        error_text = await response.text()
+                        try:
+                            error_json = json.loads(error_text)
+                            error_message = error_json.get("error", error_text)
+                        except json.JSONDecodeError:
+                            error_message = error_text
+                        print(f"ERROR: Firecrawl map API error ({response.status}): {error_message}")
+                        return []
+
+                    result = await response.json()
+                    print(f"DEBUG: Map response success: {result.get('success', False)}")
+
+                    # Extract URLs from response
+                    # Firecrawl returns {"success": true, "links": [...]}
+                    if result.get("success") and result.get("links"):
+                        urls_found = result["links"]
+                        print(f"DEBUG: Found {len(urls_found)} URLs via Firecrawl map")
+                        return urls_found
+                    else:
+                        print(f"DEBUG: Map returned no URLs. Response: {result}")
+                        return []
+
+        except asyncio.TimeoutError:
+            print(f"ERROR: Timeout during Firecrawl map for {url}")
+            return []
+        except aiohttp.ClientError as e:
+            print(f"ERROR: Connection error during Firecrawl map: {str(e)}")
+            return []
+        except Exception as e:
+            print(f"ERROR: Unexpected error during Firecrawl map for {url}: {str(e)}")
+            return []
+
     async def scrape_multiple_urls(
         self,
         urls: List[str],
