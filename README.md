@@ -1,21 +1,32 @@
-# analystOS 🤖📊
+# analystOS
 
-> **AI-powered research platform with Web UI + optional Notion automation**
+> **AI-powered research platform for crypto and traditional finance with Web UI + optional Notion automation**
 
-A production-ready research automation platform powered by OpenRouter (50+ AI models). Use the interactive web interface for on-demand research, or connect Notion for fully automated workflows.
+A production-ready research and market intelligence platform powered by OpenRouter (50+ AI models). Analyze cryptocurrencies and stocks side-by-side, run comprehensive financial research, and automate due diligence workflows.
 
-## ✨ Two Ways to Use
+## Key Capabilities
 
-### 🖥️ **Web UI (Interactive Research)**
+| Crypto | Stocks | Cross-Asset |
+|--------|--------|-------------|
+| Real-time prices via CoinGecko | Fundamentals via OpenBB/FMP | Compare BTC vs VISA directly |
+| Historical data & charts | SEC filings (10-K, 10-Q, 8-K) | Volatility normalization (24/7 vs market hours) |
+| Top 250 coins by market cap | Income, balance sheet, cash flow | Sector-based analysis |
+| AI-powered analysis | Analyst estimates & insider trades | Yield comparison (staking vs dividends) |
+
+---
+
+## Two Ways to Use
+
+### Web UI (Interactive Research)
 ```
 1. Open the Streamlit web interface
 2. Upload documents, add URLs, or enter a research query
-3. Select your AI model (GPT-4, Claude, Gemini, etc.)
-4. Get comprehensive research reports instantly
-5. Chat with your research using RAG-powered Q&A
+3. Use Financial Research for stocks or Crypto AI for crypto
+4. Compare assets across markets with Market Intelligence
+5. Get comprehensive research reports instantly
 ```
 
-### 🔗 **Notion Automation (Zero-Touch Mode)**
+### Notion Automation (Zero-Touch Mode)
 ```
 1. Connect your Notion database
 2. Add a project to Notion
@@ -24,549 +35,327 @@ A production-ready research automation platform powered by OpenRouter (50+ AI mo
 5. Full report published back to Notion
 ```
 
-**Use either mode independently, or both together.**
+---
+
+## Features
+
+### Financial Research (Stocks)
+- **Price Data**: Real-time snapshots and historical prices via OpenBB
+- **Fundamentals**: Income statements, balance sheets, cash flow statements
+- **SEC Filings**: 10-K, 10-Q, 8-K with item-level extraction
+- **Metrics**: Financial ratios, analyst estimates, insider trades
+- **News**: Company news and market sentiment
+- **AI Router**: Natural language queries routed to appropriate tools
+
+### Crypto Intelligence
+- **Live Market Data**: Real-time cryptocurrency prices via CoinGecko MCP
+- **Historical Analysis**: Price history with customizable intervals
+- **Top Coins**: Access to top 250 cryptocurrencies by market cap
+- **AI Chat**: Interactive crypto analysis and insights
+- **Portfolio Tracking**: Multi-coin comparisons and trends
+
+### Market Intelligence (Cross-Asset)
+- **Direct Comparison**: Compare crypto vs stocks (BTC vs V, ETH vs MA)
+- **Volatility Analysis**: Normalized comparisons accounting for 24/7 vs market hours
+- **Sector Views**: CMC-style sector categorization for tech stocks
+- **Yield Comparison**: Staking APY vs dividend yields
+
+### Research Suite
+- **Multi-Format Documents**: PDF, DOCX, TXT, Markdown with OCR
+- **DocSend Integration**: Automated presentation analysis
+- **Web Scraping**: Firecrawl-powered sitemap discovery and extraction
+- **Deep Research**: LangChain ODR framework for multi-agent research
+- **RAG Chat**: Context-aware Q&A using FAISS vector search
+
+### Entity Extraction (LangExtract)
+- **Structured Extraction**: People, organizations, funding rounds, metrics
+- **Source Grounding**: All entities linked to source documents
+- **Smart Caching**: Results cached for unchanged content
+
+### Notion Automation
+- **Real-Time Monitoring**: Watches Notion database for new entries
+- **Auto-Research**: Triggers deep research on new projects
+- **AI Scoring**: Automated due diligence evaluation
+- **Direct Publishing**: Reports published to Notion pages
 
 ---
 
-## 🌟 Key Features
+## Architecture
 
-### 🔗 **Notion Automation (Zero-Touch Research)**
-- **Add & Forget**: Add projects to Notion, get full research reports automatically
-- **Real-Time Monitoring**: Watches your Notion database for new entries
-- **Auto-Research Pipeline**: Triggers deep research on new projects
-- **AI Scoring**: Automated due diligence scoring and evaluation
-- **Direct Publishing**: Reports published directly to your Notion pages
-
-### 🔬 **Interactive Research Suite**
-- **Multi-Format Document Processing**: PDF, DOCX, TXT, Markdown with OCR support
-- **DocSend Integration**: Automated presentation analysis with stealth browsing
-- **Advanced Web Scraping**: Firecrawl-powered content extraction with sitemap discovery
-- **Deep Research Mode**: LangChain's Open Deep Research (ODR) framework integration
-- **RAG-Powered Chat**: Context-aware Q&A about research content using FAISS vector search
-
-### 💰 **Crypto Intelligence Hub**
-- **Live Market Data**: Real-time cryptocurrency information via CoinGecko MCP
-- **Interactive Analysis**: AI-powered crypto insights and technical analysis
-- **Dynamic Visualizations**: Plotly and Altair-based charts and metrics
-- **Portfolio Intelligence**: Multi-coin comparisons and trend analysis
-
-### 🧠 **Advanced AI Integration**
-- **Multi-Model Support**: GPT-5.2, Claude Opus 4.5, Gemini 3, Qwen, DeepSeek R1
-- **OpenRouter API**: Unified access to 50+ AI models
-- **Free Tier Models**: Qwen3, DeepSeek R1T Chimera for cost-effective research
-- **Custom Research Prompts**: Specialized prompts for due diligence and analysis
-
-### 🔍 **Entity Extraction (LangExtract)**
-- **Structured Extraction**: Automatically extract people, organizations, funding rounds, metrics, and more
-- **Multi-Source Support**: Extract from documents, web content, and DocSend presentations
-- **Source Grounding**: All entities are linked to their source documents
-- **Smart Caching**: Results are cached to avoid re-extraction on unchanged content
-- **AI-Enhanced Reports**: Extracted entities are automatically included in research prompts
-
-## 🏗️ Architecture
-
-### **Core Components**
 ```
-├── main.py                     # Streamlit application entry point
+├── main.py                          # Streamlit entry point
 ├── src/
-│   ├── controllers/            # Application orchestration
-│   │   └── app_controller.py   # Main app controller with auth & routing
-│   ├── pages/                  # Modular page implementations
-│   │   ├── interactive_research.py    # Document processing & AI analysis
-│   │   ├── notion_automation.py       # Notion CRM integration
-│   │   ├── crypto_chatbot.py          # Crypto intelligence interface
-│   │   └── voice_cloner_page.py       # Voice synthesis (experimental)
-│   ├── services/               # External integrations
-│   │   ├── odr_service.py             # Open Deep Research integration
-│   │   ├── user_history_service.py    # Session management
-│   │   └── crypto_analysis/           # Crypto data services
-│   ├── core/                   # Core business logic
-│   │   ├── research_engine.py         # Research automation
-│   │   ├── rag_utils.py              # Vector search & embeddings
-│   │   ├── scanner_utils.py          # Web discovery & parsing
-│   │   └── docsend_client.py         # DocSend processing
-│   └── models/                 # Data models & schemas
-├── config/                     # Configuration files
-│   ├── users.yaml             # User management
-│   └── mcp_config.json        # MCP integrations
-└── tests/                     # Comprehensive test suite
+│   ├── controllers/
+│   │   └── app_controller.py        # Auth, routing, validation
+│   ├── pages/
+│   │   ├── interactive_research.py  # Document processing & AI analysis
+│   │   ├── financial_research.py    # Stocks research UI
+│   │   ├── market_intelligence.py   # Cross-asset comparison
+│   │   ├── crypto_chatbot.py        # Crypto AI interface
+│   │   └── notion_automation.py     # Notion CRM integration
+│   ├── services/
+│   │   ├── financial_tools/         # 19 financial data tools
+│   │   │   ├── tools.py             # Tool implementations
+│   │   │   ├── router.py            # OpenRouter-based routing
+│   │   │   ├── schemas.py           # OpenAI function schemas
+│   │   │   └── crypto_resolver.py   # Ticker format conversion
+│   │   ├── market_intelligence/     # Cross-asset services
+│   │   │   ├── cross_asset_service.py
+│   │   │   ├── volatility_service.py
+│   │   │   └── sector_service.py
+│   │   ├── openbb/                  # OpenBB Platform client
+│   │   │   └── client.py
+│   │   └── mcp/                     # MCP integrations
+│   │       └── coingecko_client.py  # CoinGecko data
+│   ├── core/
+│   │   ├── research_engine.py       # Research automation
+│   │   ├── scanner_utils.py         # Web discovery (Firecrawl)
+│   │   └── docsend_client.py        # DocSend processing
+│   └── utils/
+│       └── session_persistence.py   # Secure session management
+├── config/
+│   ├── users.yaml                   # User management
+│   ├── mcp_config.json              # MCP integrations
+│   └── sector_classifications.yaml  # Sector mappings
+└── tests/
 ```
 
-### **Technology Stack**
-- **Backend**: Python 3.11+, Streamlit, FastAPI
-- **AI/ML**: OpenAI, LangChain, FAISS, sentence-transformers
+### Technology Stack
+- **Backend**: Python 3.11+, Streamlit
+- **Financial Data**: OpenBB Platform, CoinGecko, FMP
+- **AI/ML**: OpenRouter, LangChain, FAISS
 - **Browser Automation**: Selenium, Playwright
-- **Document Processing**: PyMuPDF, python-docx, Tesseract OCR
-- **Data**: pandas, numpy, Redis (optional)
-- **Visualization**: Plotly, Altair, Bokeh
+- **Document Processing**: PyMuPDF, Tesseract OCR
+- **Visualization**: Plotly, Altair
 
-## 🚀 Quick Start
+---
 
-### **1. Installation**
+## Quick Start
 
-#### **Option A: Docker (Recommended)**
-```bash
-git clone <repository-url>
-cd ai-research-agent
-cp .env.example .env
-# Configure your API keys in .env
-docker-compose up -d
-```
+### 1. Installation
 
-#### **Option B: Local Installation**
 ```bash
 # Clone repository
-git clone <repository-url>
-cd ai-research-agent
+git clone https://github.com/sheeki03/analystOS.git
+cd analystOS
 
-# Install Python dependencies
+# Install dependencies
 pip install -r requirements.txt
 
 # Install browser dependencies
 playwright install
 
-# Install system dependencies (macOS)
-brew install tesseract
-
-# Install system dependencies (Ubuntu)
-sudo apt-get install tesseract-ocr
-
-# Install system dependencies (Windows)
-# Download from: https://github.com/UB-Mannheim/tesseract/wiki
+# Install Tesseract OCR (for document processing)
+# macOS: brew install tesseract
+# Ubuntu: sudo apt-get install tesseract-ocr
 ```
 
-### **2. Configuration**
+### 2. Configuration
 
-#### **Environment Variables (.env)**
+Create a `.env` file:
+
 ```env
 # Required: AI Model Access
-OPENROUTER_API_KEY=your_openrouter_api_key_here
+OPENROUTER_API_KEY=your_openrouter_key
 
-# Optional: Additional AI Providers
-OPENAI_API_KEY=your_openai_key_here
-ANTHROPIC_API_KEY=your_anthropic_key_here
+# Financial Data (Stocks)
+FMP_API_KEY=your_fmp_key              # financialmodelingprep.com
+OPENBB_PAT=your_openbb_token          # Optional, for higher limits
+
+# Optional: Additional Providers
+FINNHUB_API_KEY=your_finnhub_key      # For news
+OPENAI_API_KEY=your_openai_key
+ANTHROPIC_API_KEY=your_anthropic_key
 
 # Optional: Notion Integration
-NOTION_TOKEN=your_notion_integration_token
+NOTION_TOKEN=your_notion_token
 
 # Optional: Web Scraping
-FIRECRAWL_API_URL=http://localhost:3002
 FIRECRAWL_API_KEY=your_firecrawl_key
 
-# Optional: Deep Research (ODR)
-TAVILY_API_KEY=your_tavily_search_key
+# Optional: Deep Research
+TAVILY_API_KEY=your_tavily_key
 
-# Optional: Caching & Performance
-REDIS_URL=redis://localhost:6379
-
-# System Configuration
-TESSERACT_CMD=/usr/bin/tesseract  # Adjust for your system
+# Security
+SESSION_SECRET_KEY=your_random_secret_key
 ```
 
-#### **User Management (config/users.yaml)**
-```yaml
-users:
-  admin:
-    username: admin
-    password_hash: $2b$12$... # Use generate_password.py script
-    role: admin
-  researcher:
-    username: researcher  
-    password_hash: $2b$12$...
-    role: researcher
-```
+### 3. Run Application
 
-### **3. Run Application**
 ```bash
-# Local development
 streamlit run main.py
-
-# Production
-streamlit run main.py --server.port 8501 --server.address 0.0.0.0
 ```
 
-Visit `http://localhost:8501` and login with your configured credentials.
+Visit `http://localhost:8501` and login.
 
-## 📖 Usage Guide
+---
 
-### **Interactive Research Workflow**
+## Financial Tools Reference
 
-1. **🔐 Authentication**: Login with username/password
-2. **📋 Research Query**: Define your research question or topic
-3. **📄 Document Upload**: Upload PDF, DOCX, or text files (optional)
-4. **🌐 Web Content**: Add specific URLs or enable sitemap crawling (optional)
-5. **📊 DocSend Processing**: Process presentation decks with email authentication (optional)
-6. **🔬 Research Mode Selection**:
-   - **Classic Mode**: Traditional AI analysis of provided sources
-   - **Deep Research (ODR)**: Advanced multi-agent research with web search
-7. **⚙️ Configuration**: Adjust research parameters (breadth, depth, tool calls)
-8. **🤖 AI Analysis**: Generate comprehensive research reports
-9. **💬 Interactive Chat**: Ask questions about the research using RAG
+### Price Tools
+| Tool | Description | Source |
+|------|-------------|--------|
+| `get_price_snapshot` | Current stock price | OpenBB/FMP |
+| `get_prices` | Historical stock prices | OpenBB/FMP |
+| `get_crypto_price_snapshot` | Current crypto price | CoinGecko |
+| `get_crypto_prices` | Historical crypto prices | CoinGecko |
+| `get_available_crypto_tickers` | Top 250 crypto tickers | CoinGecko |
 
-### **Notion Automation Workflow**
+### Fundamentals
+| Tool | Description | Source |
+|------|-------------|--------|
+| `get_income_statements` | Revenue, expenses, profit | OpenBB/FMP |
+| `get_balance_sheets` | Assets, liabilities, equity | OpenBB/FMP |
+| `get_cash_flow_statements` | Operating, investing, financing | OpenBB/FMP |
+| `get_all_financial_statements` | Combined statements | OpenBB/FMP |
+| `get_financial_metrics_snapshot` | Current ratios & metrics | OpenBB/FMP |
+| `get_financial_metrics` | Historical metrics | OpenBB/FMP |
 
-1. **🔗 Notion Setup**: Configure Notion integration token
-2. **📊 Database Selection**: Choose Notion database to monitor
-3. **⚡ Enable Monitoring**: Start real-time database polling
-4. **🎯 Configure Triggers**: Set up automated research workflows
-5. **📈 AI Scoring**: Enable intelligent project evaluation
-6. **📝 Report Publishing**: Automatic research report generation to Notion
+### Filings & Research
+| Tool | Description | Source |
+|------|-------------|--------|
+| `get_filings` | SEC filing list | OpenBB/SEC |
+| `get_10k_filing_items` | Annual report sections | OpenBB/SEC |
+| `get_10q_filing_items` | Quarterly report sections | OpenBB/SEC |
+| `get_8k_filing_items` | Current event reports | OpenBB/SEC |
+| `get_news` | Company news | OpenBB/Finnhub |
+| `get_analyst_estimates` | Earnings estimates | OpenBB/FMP |
+| `get_insider_trades` | Insider transactions | OpenBB/SEC |
+| `get_segmented_revenues` | Revenue by segment | OpenBB/FMP |
 
-### **Crypto Intelligence Workflow**
+### Crypto Limitations
+- **USD pairs only**: BTC-USD supported, BTC-ETH not supported
+- **No minute interval**: Use day, week, month, or year
+- **Max 365 days**: Historical data limited to 1 year from today
+- **Close prices only**: Returns close + volume, not OHLC
 
-1. **🔌 MCP Connection**: Connect to CoinGecko data source
-2. **💰 Coin Selection**: Choose cryptocurrencies to analyze
-3. **📊 Technical Analysis**: Generate interactive charts and metrics
-4. **🧠 AI Insights**: Get AI-powered market analysis and predictions
-5. **📈 Portfolio Tracking**: Monitor multiple coins and trends
+---
 
-## 🔧 Advanced Configuration
+## Default Watchlist
 
-### **Deep Research (ODR) Setup**
+The platform comes with a default cross-asset watchlist:
 
-Deep Research uses LangChain's Open Deep Research framework for advanced multi-agent research:
+**Crypto**: BTC, ETH, SOL
+**Payments**: V (Visa), MA (Mastercard)
+**Tech**: NVDA, INTC, MSFT, GOOGL
+**Finance**: JPM, COIN, SOFI
 
-```bash
-# Install ODR dependencies (included in requirements.txt)
-pip install langgraph langchain-community langchain-openai langchain-anthropic
+---
 
-# Get Tavily API key for web search
-# Visit: https://tavily.com/
-export TAVILY_API_KEY=your_tavily_key_here
+## Usage Examples
+
+### Financial Research
+```
+Query: "Show me AAPL revenue for the last 3 years"
+→ Routes to get_income_statements(ticker="AAPL", period="annual", limit=3)
+
+Query: "Compare NVDA and AMD financial metrics"
+→ Routes to get_financial_metrics for both tickers
 ```
 
-**ODR Parameters for Detailed Reports:**
-- **Breadth (6-15)**: Number of concurrent research units
-- **Depth (4-8)**: Research iteration depth  
-- **Max Tool Calls (8-15)**: Web searches per iteration
+### Crypto Analysis
+```
+Query: "Bitcoin price last month"
+→ Routes to get_crypto_prices(ticker="BTC-USD", interval="day", ...)
 
-**Ultra-Comprehensive Mode**: Breadth=10, Depth=6, Tools=12 (720 total operations)
-
-### **Entity Extraction (LangExtract) Setup**
-
-Entity extraction automatically identifies people, organizations, funding rounds, metrics, and more from your research sources:
-
-```bash
-# Install langextract (pinned version for API stability)
-pip install langextract==0.1.0
-
-# Install libmagic (required system dependency)
-# macOS:
-brew install libmagic
-
-# Ubuntu/Debian:
-sudo apt-get install libmagic1
-
-# Windows:
-pip install python-magic-bin  # Includes bundled libmagic
+Query: "Top 10 cryptocurrencies"
+→ Uses CoinGecko markets endpoint
 ```
 
-**Enable in .env:**
-```env
-LANGEXTRACT_ENABLED=true
-LANGEXTRACT_MODEL=openai/gpt-4o
-LANGEXTRACT_EXTRACTION_PASSES=2
-LANGEXTRACT_MAX_CONCURRENT=3
-LANGEXTRACT_MAX_CHUNK_SIZE=50000
+### Cross-Asset Comparison
+```
+Query: "Compare BTC vs VISA market cap"
+→ Uses Market Intelligence cross-asset service
 ```
 
-**Entity Types Extracted:**
-- **People**: Names, titles, organizations, roles
-- **Organizations**: Companies, investors, partners, their roles
-- **Funding**: Rounds (Seed, Series A/B/C), amounts, dates
-- **Metrics**: MAU, revenue, growth rates, valuations
-- **Technology**: Tech stack, platforms, categories
-- **Risk Factors**: Identified risks with severity
-- **Partnerships**: Business alliances and collaborations
+---
 
-### **Model Configuration**
+## Security Features
 
-The platform supports multiple AI providers and models:
+- **HMAC-Signed Sessions**: URL session tokens are cryptographically signed
+- **Input Validation**: Username/password validation with strength requirements
+- **Subprocess Whitelist**: Only approved commands can execute
+- **SSL Verification**: Never disabled, fails safely
+- **Role-Based Access**: Admin vs researcher permissions
+- **XSS Prevention**: Safe Streamlit rendering methods
 
-```python
-# Available Models
-AI_MODEL_OPTIONS = {
-    # OpenAI Models
-    "openai/gpt-5.2": "GPT-5.2",
-    "openai/gpt-5.2-pro": "GPT-5.2 Pro",
-    # Anthropic Models
-    "anthropic/claude-sonnet-4.5": "Claude Sonnet 4.5",
-    "anthropic/claude-opus-4.5": "Claude Opus 4.5",
-    # Google Models
-    "google/gemini-3": "Gemini 3",
-    "google/gemini-2.5-pro": "Gemini 2.5 Pro",
-    "google/gemini-2.5-flash": "Gemini 2.5 Flash",
-    # Free Models
-    "qwen/qwen3-30b-a3b:free": "Qwen3 30B (Free)",
-    "qwen/qwen3-235b-a22b:free": "Qwen3 235B (Free)",
-    "tngtech/deepseek-r1t-chimera:free": "DeepSeek R1T Chimera (Free)",
-}
-```
+---
 
-### **Performance Optimization**
+## AI Models
 
-#### **Redis Caching (Optional)**
-```bash
-# Install Redis
-docker run -d -p 6379:6379 redis:alpine
+Supported via OpenRouter:
 
-# Configure in .env
-REDIS_URL=redis://localhost:6379
-```
+| Provider | Models |
+|----------|--------|
+| OpenAI | GPT-4o, GPT-4 Turbo |
+| Anthropic | Claude 3.5 Sonnet, Claude 3 Opus |
+| Google | Gemini 1.5 Pro, Gemini 1.5 Flash |
+| Free Tier | Qwen3, DeepSeek R1T Chimera |
 
-#### **Browser Configuration**
-```python
-# Chrome/Chromium (Recommended for DocSend)
-CHROME_BINARY=/usr/bin/google-chrome
+---
 
-# Firefox Alternative
-FIREFOX_BINARY=/usr/bin/firefox
-```
+## Testing
 
-## 🔐 Security & Authentication
-
-### **User Management**
-
-The platform uses role-based access control:
-
-- **Admin**: Full system access, user management
-- **Researcher**: Research features, limited configuration
-
-**Password Generation:**
-```bash
-python -c "
-import bcrypt
-password = 'your_password_here'
-hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-print(hashed.decode('utf-8'))
-"
-```
-
-### **Security Features**
-
-- **🔐 bcrypt Password Hashing**: Secure password storage
-- **🛡️ Session Management**: Secure session tokens with expiration
-- **📝 Audit Logging**: Comprehensive action tracking
-- **🚧 Rate Limiting**: API abuse prevention
-- **🔒 Input Validation**: Sanitized user inputs
-- **🔑 API Key Management**: Environment variable security
-
-## 🧪 Testing
-
-### **Run Test Suite**
 ```bash
 # Run all tests
 pytest
 
-# Run specific test categories
-pytest tests/test_research.py          # Research workflows
-pytest tests/test_notion_connection.py # Notion integration
-pytest tests/test_firecrawl.py        # Web scraping
-pytest tests/test_odr_service.py      # Deep Research
-pytest tests/test_browser_fix.py      # DocSend processing
-
 # Run with coverage
 pytest --cov=src tests/
+
+# Run specific tests
+pytest tests/integration/test_tool_schemas.py
+pytest tests/services/test_crypto_resolver.py
 ```
 
-### **Test Configuration**
+---
 
-Tests require API credentials for integration testing:
-```env
-# Add to .env for testing
-NOTION_TOKEN=your_test_notion_token
-FIRECRAWL_API_KEY=your_test_firecrawl_key
-OPENROUTER_API_KEY=your_test_openrouter_key
-```
+## Version History
 
-## 🚀 Deployment
+### v3.0.0 (Current)
+- Added OpenBB integration for stocks/fundamentals
+- Added 19 financial data tools
+- Added Market Intelligence with cross-asset comparison
+- Added Financial Research and Market Intelligence pages
+- Enhanced CoinGecko client with markets endpoint
+- Integrated Firecrawl for sitemap scanning
+- Security hardening (SSL, HMAC sessions, input validation)
 
-### **Docker Deployment**
+### v2.1.0
+- Deep Research (ODR) integration
+- Enhanced crypto intelligence
+- Entity extraction (LangExtract)
 
-```yaml
-# docker-compose.yml
-version: '3.8'
-services:
-  app:
-    build: .
-    ports:
-      - "8501:8501"
-    environment:
-      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
-      - NOTION_TOKEN=${NOTION_TOKEN}
-      - REDIS_URL=redis://redis:6379
-    volumes:
-      - ./logs:/app/logs
-      - ./reports:/app/reports
-    depends_on:
-      - redis
-      
-  redis:
-    image: redis:alpine
-    ports:
-      - "6379:6379"
-```
+### v2.0.0
+- Notion automation
+- Crypto chatbot
 
-### **AWS EC2 Deployment**
+### v1.0.0
+- Basic research and document processing
 
-```bash
-# Launch EC2 instance (Ubuntu 20.04+)
-# Install Docker and docker-compose
-sudo apt update
-sudo apt install docker.io docker-compose
+---
 
-# Clone and deploy
-git clone <repository-url>
-cd ai-research-agent
-cp .env.example .env
-# Configure .env with your API keys
-sudo docker-compose up -d
+## Contributing
 
-# Set up monitoring (optional)
-bash scripts/setup_monitoring.sh
-```
-
-### **Production Configuration**
-
-```bash
-# Environment setup
-export STREAMLIT_SERVER_PORT=80
-export STREAMLIT_SERVER_ADDRESS=0.0.0.0
-export STREAMLIT_SERVER_ENABLE_CORS=false
-export STREAMLIT_GLOBAL_DEVELOPMENT_MODE=false
-
-# Run with SSL (recommended)
-streamlit run main.py \
-  --server.port 443 \
-  --server.sslCertFile /path/to/cert.pem \
-  --server.sslKeyFile /path/to/key.pem
-```
-
-## 📊 API Integration Details
-
-### **OpenRouter Integration**
-- **50+ AI Models**: GPT, Claude, Gemini, Qwen, Llama, and more
-- **Unified API**: Single interface for multiple providers
-- **Rate Limiting**: Configurable requests per hour
-- **Fallback Strategy**: Automatic model switching on failures
-
-### **Notion Integration** 
-- **Database Monitoring**: Real-time change detection
-- **Automated Workflows**: Research pipeline triggers
-- **Content Publishing**: Direct page creation and updates
-- **Property Mapping**: Custom field synchronization
-
-### **Firecrawl Integration**
-- **Intelligent Scraping**: AI-powered content extraction
-- **Sitemap Discovery**: Automated URL discovery
-- **Batch Processing**: Multiple URL handling
-- **Rate Limiting**: Respectful crawling practices
-
-### **MCP (Model Context Protocol)**
-- **CoinGecko Integration**: Live cryptocurrency data
-- **Extensible Framework**: Plugin architecture for new providers
-- **Type Safety**: Structured data models
-- **Real-time Updates**: Live market data streams
-
-## 🤝 Contributing
-
-### **Development Setup**
-```bash
-# Fork and clone repository
-git clone https://github.com/yourusername/ai-research-agent.git
-cd ai-research-agent
-
-# Create development environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
-pip install -r requirements-dev.txt
-
-# Install pre-commit hooks
-pre-commit install
-
-# Run development server
-streamlit run main.py
-```
-
-### **Code Style**
-- **Type Hints**: Required for all functions
-- **Docstrings**: Google style documentation
-- **Testing**: pytest with >80% coverage
-- **Linting**: flake8, black, isort
-- **Security**: bandit security scanning
-
-### **Contribution Guidelines**
 1. Fork the repository
 2. Create feature branch (`git checkout -b feature/amazing-feature`)
 3. Commit changes (`git commit -m 'Add amazing feature'`)
 4. Push to branch (`git push origin feature/amazing-feature`)
 5. Open Pull Request
 
-## 📝 License
+---
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+## License
 
-## 🆘 Support & Documentation
-
-### **Getting Help**
-- **Issues**: [GitHub Issues](https://github.com/yourusername/ai-research-agent/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/ai-research-agent/discussions)
-- **Documentation**: [Wiki](https://github.com/yourusername/ai-research-agent/wiki)
-
-### **Common Issues & Solutions**
-
-#### **DocSend Processing Issues**
-```bash
-# Install Chrome/Chromium
-# Ubuntu: sudo apt install google-chrome-stable
-# macOS: brew install --cask google-chrome
-# Windows: Download from google.com/chrome
-
-# Verify Tesseract installation
-tesseract --version
-```
-
-#### **Notion Connection Issues**
-```bash
-# Verify integration token
-curl -H "Authorization: Bearer YOUR_TOKEN" \
-     -H "Notion-Version: 2022-06-28" \
-     https://api.notion.com/v1/users/me
-```
-
-#### **Memory Issues with Large Documents**
-```python
-# Increase memory limits in config
-MAX_DOCUMENT_SIZE = 50 * 1024 * 1024  # 50MB
-CHUNK_SIZE = 1000  # Reduce for memory constraints
-```
-
-## 🔄 Version History
-
-### **Current: v2.1.0**
-- ✅ Deep Research (ODR) integration
-- ✅ Enhanced crypto intelligence
-- ✅ Improved UI/UX
-- ✅ Advanced authentication
-- ✅ Comprehensive testing
-
-### **Previous Versions**
-- **v2.0.0**: Notion automation, crypto chatbot
-- **v1.5.0**: DocSend integration, RAG chat
-- **v1.0.0**: Basic research and document processing
-
-## 🙏 Acknowledgments
-
-- **LangChain**: Open Deep Research framework
-- **OpenRouter**: Multi-model AI access
-- **Streamlit**: Web application framework
-- **Notion**: CRM integration platform
-- **Firecrawl**: Web scraping service
-- **CoinGecko**: Cryptocurrency data API
+MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 
-**Built with ❤️ for researchers, analysts, and knowledge workers worldwide.**
+## Support
 
-*For detailed API documentation, advanced configuration, and deployment guides, visit our [comprehensive documentation wiki](https://github.com/yourusername/ai-research-agent/wiki).*
+- **Issues**: [GitHub Issues](https://github.com/sheeki03/analystOS/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/sheeki03/analystOS/discussions)
+
+---
+
+**Built for researchers, analysts, and investors who need comprehensive market intelligence across crypto and traditional finance.**
