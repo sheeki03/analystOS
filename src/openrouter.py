@@ -10,6 +10,7 @@ from .config import (
     OPENROUTER_API_KEY,
     OPENROUTER_BASE_URL,
     OPENROUTER_PRIMARY_MODEL,
+    OPENROUTER_FALLBACK_MODEL,
     SYSTEM_PROMPT
 )
 
@@ -26,7 +27,8 @@ class OpenRouterClient:
         self.openrouter_api_key = OPENROUTER_API_KEY
         self.openrouter_base_url = OPENROUTER_BASE_URL
         self.primary_model = OPENROUTER_PRIMARY_MODEL
-        
+        self.fallback_model = OPENROUTER_FALLBACK_MODEL
+
         # Nano-GPT configuration (from environment)
         self.nanogpt_api_key = os.getenv("NANOGPT_API_KEY")
         self.nanogpt_base_url = os.getenv("NANOGPT_BASE_URL", "https://nano-gpt.com/api/v1")
@@ -82,7 +84,14 @@ class OpenRouterClient:
                 "provider": "openrouter"
             }
 
-    async def _make_request(self, model: str, messages: list, temperature: float = 0.7) -> Optional[Dict[str, Any]]:
+    async def _make_request(
+        self,
+        model: str,
+        messages: list,
+        temperature: float = 0.7,
+        tools: Optional[List[dict]] = None,
+        tool_choice: Optional[str] = None,
+    ) -> Optional[Dict[str, Any]]:
         """Make an asynchronous request to the appropriate API provider."""
         provider_config = self._get_provider_config(model)
         if provider_config is None:
@@ -96,7 +105,13 @@ class OpenRouterClient:
             "messages": messages,
             "temperature": temperature
         }
-        
+
+        # Add tools if provided
+        if tools:
+            payload["tools"] = tools
+        if tool_choice:
+            payload["tool_choice"] = tool_choice
+
         # Dynamic timeout based on model - dmind models need more time for thinking
         if "dmind" in provider_config["model"].lower():
             request_timeout = ClientTimeout(total=600)  # 10 minutes for dmind models
@@ -105,16 +120,21 @@ class OpenRouterClient:
             request_timeout = ClientTimeout(total=300)  # 5 minutes for other models
 
         # Create SSL context with proper certificate verification
+        # SECURITY: Never disable SSL verification - fail safely instead
         try:
             ssl_context = ssl.create_default_context(cafile=certifi.where())
             connector = aiohttp.TCPConnector(ssl=ssl_context)
         except Exception as ssl_error:
-            print(f"SSL context creation failed, using relaxed SSL verification: {ssl_error}")
-            # Fallback: Create SSL context with relaxed verification for development
-            ssl_context = ssl.create_default_context()
-            ssl_context.check_hostname = False
-            ssl_context.verify_mode = ssl.CERT_NONE
-            connector = aiohttp.TCPConnector(ssl=ssl_context)
+            # Try system default certificates as fallback
+            try:
+                ssl_context = ssl.create_default_context()
+                connector = aiohttp.TCPConnector(ssl=ssl_context)
+                print(f"Warning: Using system SSL certificates (certifi failed: {ssl_error})")
+            except Exception as fallback_error:
+                # SECURITY: Do not disable SSL verification - abort instead
+                print(f"CRITICAL: SSL context creation failed completely: {fallback_error}")
+                print("Cannot proceed without secure SSL connection. Please install certifi: pip install certifi")
+                return None
 
         async with aiohttp.ClientSession(headers=provider_config["headers"], connector=connector) as session:
             # Retry logic for 503 Service Unavailable errors
@@ -169,21 +189,21 @@ class OpenRouterClient:
             provider_config = self._get_provider_config(model_override)
             print(f"Using model override: {model_override} via {provider_config['provider']}")
             response_data = await self._make_request(model_override, messages, temperature)
-            
+
             # If override model fails, try fallback
-            if not response_data and model_override != "qwen/qwen3-30b-a3b:free":
-                print(f"Model {model_override} failed, falling back to qwen/qwen3-30b-a3b:free")
-                response_data = await self._make_request("qwen/qwen3-30b-a3b:free", messages, temperature)
+            if not response_data and model_override != self.fallback_model:
+                print(f"Model {model_override} failed, falling back to {self.fallback_model}")
+                response_data = await self._make_request(self.fallback_model, messages, temperature)
         else:
             # Use primary model with fallback logic
             provider_config = self._get_provider_config(self.primary_model)
             print(f"Using primary model: {self.primary_model} via {provider_config['provider']}")
             response_data = await self._make_request(self.primary_model, messages, temperature)
-            
+
             # If primary model fails, try fallback
-            if not response_data and self.primary_model != "qwen/qwen3-30b-a3b:free":
-                print(f"Primary model {self.primary_model} failed, falling back to qwen/qwen3-30b-a3b:free")
-                response_data = await self._make_request("qwen/qwen3-30b-a3b:free", messages, temperature)
+            if not response_data and self.primary_model != self.fallback_model:
+                print(f"Primary model {self.primary_model} failed, falling back to {self.fallback_model}")
+                response_data = await self._make_request(self.fallback_model, messages, temperature)
         
         # Process the response (regardless of which model was used)
         if response_data and "choices" in response_data and response_data["choices"]:
@@ -294,5 +314,52 @@ Please follow the Chain of Thought Framework and Task Formatting guidelines prov
         except json.JSONDecodeError as e:
             print(f"Error parsing JSON for final report: {e}")
             print(f"Raw response for final report: {response_text}")
-        
-        return "Error generating final report" 
+
+        return "Error generating final report"
+
+    async def chat_completion_with_tools(
+        self,
+        messages: List[dict],
+        tools: List[dict],
+        model: Optional[str] = None,
+        tool_choice: str = "auto",
+        temperature: float = 0.7,
+    ) -> dict:
+        """
+        Make a chat completion request with tool calling support.
+
+        Returns raw completion with tool_calls, matching OpenAI format.
+
+        Args:
+            messages: List of message dictionaries
+            tools: List of tool definitions in OpenAI format
+            model: Model to use (defaults to primary_model)
+            tool_choice: How to handle tool calls ("auto", "none", or specific tool)
+            temperature: Sampling temperature
+
+        Returns:
+            Dictionary with:
+                - "content": str or None (text response)
+                - "tool_calls": list of tool call objects with:
+                    - "id": str
+                    - "type": "function"
+                    - "function": {"name": str, "arguments": str (JSON)}
+        """
+        model = model or self.primary_model
+
+        response = await self._make_request(
+            model=model,
+            messages=messages,
+            temperature=temperature,
+            tools=tools,
+            tool_choice=tool_choice,
+        )
+
+        if not response or "choices" not in response:
+            return {"content": None, "tool_calls": []}
+
+        message = response["choices"][0]["message"]
+        return {
+            "content": message.get("content"),
+            "tool_calls": message.get("tool_calls", [])
+        } 

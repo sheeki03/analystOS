@@ -84,8 +84,8 @@ class DocSendClient:
             # Enhanced stealth arguments to avoid bot detection
             chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
             chrome_options.add_experimental_option('useAutomationExtension', False)
-            chrome_options.add_argument("--disable-web-security")
-            chrome_options.add_argument("--allow-running-insecure-content")
+            # SECURITY: Removed --disable-web-security and --allow-running-insecure-content
+            # These flags disable same-origin policy and allow mixed content, creating severe vulnerabilities
             chrome_options.add_argument("--disable-client-side-phishing-detection")
             chrome_options.add_argument("--disable-sync")
             chrome_options.add_argument("--metrics-recording-only")

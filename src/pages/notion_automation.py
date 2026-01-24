@@ -10,8 +10,9 @@ from typing import Dict, List, Any, Optional
 import tempfile
 from pathlib import Path
 import json
-import pickle
 import os
+import hmac
+import hashlib
 import pandas as pd
 import io
 import re
@@ -33,7 +34,7 @@ from src.notion_writer import publish_report
 from src.notion_scorer import run_project_scoring
 from src.notion_pusher import publish_ratings
 from src.config import AI_MODEL_OPTIONS
-from src.core.scanner_utils import discover_sitemap_urls
+from src.core.scanner_utils import discover_urls_via_firecrawl
 from src.openrouter import OpenRouterClient
 from src.firecrawl_client import FirecrawlClient
 from src.core.rag_utils import (
@@ -49,23 +50,33 @@ from src.services.user_history_service import user_history_service
 
 # Cache configuration
 CACHE_DURATION_HOURS = 12
-CACHE_FILE_PATH = "cache/notion_pages_cache.pkl"
+# SECURITY: Changed from pickle to JSON to prevent deserialization attacks
+CACHE_FILE_PATH = "cache/notion_pages_cache.json"
 
 class NotionAutomationPage(BasePage):
     """Notion automation page with CRM integration."""
-    
+
     def __init__(self):
         super().__init__("notion_automation", "Notion CRM Integration")
         # Ensure cache directory exists
         os.makedirs("cache", exist_ok=True)
-    
+
     def _load_cache(self) -> Optional[Dict]:
-        """Load cached pages data if it exists and is valid."""
+        """Load cached pages data if it exists and is valid.
+
+        SECURITY: Uses JSON instead of pickle to prevent arbitrary code execution
+        from malicious cache files.
+        """
         try:
             if os.path.exists(CACHE_FILE_PATH):
-                with open(CACHE_FILE_PATH, 'rb') as f:
-                    cache_data = pickle.load(f)
-                
+                with open(CACHE_FILE_PATH, 'r', encoding='utf-8') as f:
+                    cache_data = json.load(f)
+
+                # Validate cache structure
+                if not isinstance(cache_data, dict):
+                    self.logger.warning("Invalid cache structure, ignoring")
+                    return None
+
                 # Check if cache is still valid (within 12 hours)
                 cache_time = cache_data.get('timestamp')
                 if cache_time:
@@ -73,19 +84,24 @@ class NotionAutomationPage(BasePage):
                     now = datetime.now()
                     if now - cache_dt < timedelta(hours=CACHE_DURATION_HOURS):
                         return cache_data
+        except json.JSONDecodeError as e:
+            self.logger.warning(f"Invalid JSON in cache file: {e}")
         except Exception as e:
             self.logger.warning(f"Failed to load cache: {e}")
         return None
-    
+
     def _save_cache(self, pages_data: List[Dict]) -> None:
-        """Save pages data to cache with timestamp."""
+        """Save pages data to cache with timestamp.
+
+        SECURITY: Uses JSON instead of pickle for safe serialization.
+        """
         try:
             cache_data = {
                 'timestamp': datetime.now().isoformat(),
                 'pages': pages_data
             }
-            with open(CACHE_FILE_PATH, 'wb') as f:
-                pickle.dump(cache_data, f)
+            with open(CACHE_FILE_PATH, 'w', encoding='utf-8') as f:
+                json.dump(cache_data, f, indent=2, default=str)
         except Exception as e:
             self.logger.warning(f"Failed to save cache: {e}")
     
@@ -2158,8 +2174,8 @@ FIRECRAWL_BASE_URL=your_firecrawl_base_url
         st.session_state.notion_sitemap_scan_completed = False
         
         try:
-            with st.spinner(f"Scanning {site_url} for sitemap URLs..."):
-                discovered_urls = await discover_sitemap_urls(site_url)
+            with st.spinner(f"Discovering URLs via Firecrawl for {site_url}..."):
+                discovered_urls = await discover_urls_via_firecrawl(site_url)
             
             st.session_state.notion_discovered_sitemap_urls = discovered_urls
             st.session_state.notion_sitemap_scan_completed = True

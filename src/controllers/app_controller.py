@@ -16,6 +16,8 @@ from src.pages.interactive_research import InteractiveResearchPage
 from src.pages.notion_automation import NotionAutomationPage
 from src.pages.crypto_chatbot import CryptoChatbotPage
 from src.pages.voice_cloner_page import VoiceClonerPage
+from src.pages.market_intelligence import MarketIntelligencePage
+from src.pages.financial_research import FinancialResearchPage
 from src.utils.session_persistence import url_session_persistence
 
 
@@ -26,6 +28,8 @@ class AppController:
         self.pages = {
             "Interactive Research": InteractiveResearchPage(),
             "Crypto AI Assistant": CryptoChatbotPage(),
+            "Market Intelligence": MarketIntelligencePage(),
+            "Financial Research": FinancialResearchPage(),
             "Notion Automation": NotionAutomationPage(),
             "Voice Cloner": VoiceClonerPage(),
         }
@@ -426,12 +430,57 @@ class AppController:
                 details=f"Failed login attempt for username: '{username}'",
             )
 
+    def _validate_username(self, username: str) -> tuple[bool, str]:
+        """Validate username for security.
+
+        SECURITY: Prevents path traversal, injection, and DoS attacks.
+        """
+        import re
+        if not username:
+            return False, "Username cannot be empty."
+        if len(username) < 3:
+            return False, "Username must be at least 3 characters."
+        if len(username) > 50:
+            return False, "Username cannot exceed 50 characters."
+        if not re.match(r'^[a-zA-Z0-9_-]+$', username):
+            return False, "Username can only contain letters, numbers, underscores, and hyphens."
+        # Prevent path traversal attempts
+        if '..' in username or '/' in username or '\\' in username:
+            return False, "Invalid username."
+        return True, ""
+
+    def _validate_password(self, password: str) -> tuple[bool, str]:
+        """Validate password strength.
+
+        SECURITY: Enforces minimum password requirements.
+        """
+        if not password:
+            return False, "Password cannot be empty."
+        if len(password) < 8:
+            return False, "Password must be at least 8 characters."
+        if len(password) > 128:
+            return False, "Password cannot exceed 128 characters."
+        # Check for at least one letter and one number
+        has_letter = any(c.isalpha() for c in password)
+        has_digit = any(c.isdigit() for c in password)
+        if not (has_letter and has_digit):
+            return False, "Password must contain at least one letter and one number."
+        return True, ""
+
     async def _handle_signup(
         self, username: str, password: str, confirm_password: str
     ) -> None:
-        """Handle user signup."""
-        if not username or not password:
-            st.error("Username and password cannot be empty.")
+        """Handle user signup with input validation."""
+        # SECURITY: Validate username
+        valid, error_msg = self._validate_username(username)
+        if not valid:
+            st.error(error_msg)
+            return
+
+        # SECURITY: Validate password strength
+        valid, error_msg = self._validate_password(password)
+        if not valid:
+            st.error(error_msg)
             return
 
         if password != confirm_password:
