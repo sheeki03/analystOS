@@ -1,0 +1,145 @@
+# Sector Classifications for Cross-Asset Comparison
+# Maps assets to sectors (similar to CoinGecko categories but for cross-asset)
+
+# Tech / AI sectors (Calvin's priority)
+tech_ai:
+  name: "Technology & AI"
+  description: "Companies focused on technology, artificial intelligence, and computing"
+  stocks:
+    - NVDA   # Nvidia
+    - MSFT   # Microsoft
+    - GOOGL  # Alphabet/Google
+    - AMD    # AMD
+    - INTC   # Intel
+    - PLTR   # Palantir
+    - CRM    # Salesforce
+    - SNOW   # Snowflake
+    - DDOG   # Datadog
+  crypto:
+    - RNDR   # Render Network
+    - TAO    # Bittensor
+    - AKT    # Akash Network
+    - FET    # Fetch.ai
+    - OCEAN  # Ocean Protocol
+
+payments_fintech:
+  name: "Payments & Fintech"
+  description: "Payment processors, fintech, and financial services"
+  stocks:
+    - V      # Visa
+    - MA     # Mastercard
+    - PYPL   # PayPal
+    - SQ     # Block (Square)
+    - COIN   # Coinbase
+    - SOFI   # SoFi
+    - AFRM   # Affirm
+    - UPST   # Upstart
+  crypto:
+    - XRP    # Ripple
+    - XLM    # Stellar
+    - ALGO   # Algorand (payments focus)
+
+defi_banking:
+  name: "DeFi & Banking"
+  description: "Traditional banks and decentralized finance protocols"
+  stocks:
+    - JPM    # JPMorgan
+    - BAC    # Bank of America
+    - GS     # Goldman Sachs
+    - MS     # Morgan Stanley
+    - C      # Citigroup
+    - WFC    # Wells Fargo
+  crypto:
+    - AAVE   # Aave
+    - UNI    # Uniswap
+    - MKR    # Maker
+    - COMP   # Compound
+    - CRV    # Curve
+    - SUSHI  # SushiSwap
+
+infrastructure_layer1:
+  name: "Infrastructure & Layer 1"
+  description: "Blockchain infrastructure and layer 1 protocols"
+  stocks:
+    - MSTR   # MicroStrategy (BTC proxy)
+    - MARA   # Marathon Digital
+    - RIOT   # Riot Platforms
+    - CLSK   # CleanSpark
+  crypto:
+    - BTC    # Bitcoin
+    - ETH    # Ethereum
+    - SOL    # Solana
+    - ADA    # Cardano
+    - AVAX   # Avalanche
+    - DOT    # Polkadot
+    - ATOM   # Cosmos
+    - NEAR   # NEAR Protocol
+    - APT    # Aptos
+    - SUI    # Sui
+
+layer2_scaling:
+  name: "Layer 2 & Scaling"
+  description: "Layer 2 scaling solutions"
+  stocks: []
+  crypto:
+    - MATIC  # Polygon
+    - ARB    # Arbitrum
+    - OP     # Optimism
+    - IMX    # Immutable X
+    - LRC    # Loopring
+
+storage_compute:
+  name: "Storage & Compute"
+  description: "Decentralized storage and compute"
+  stocks:
+    - AMZN   # Amazon (AWS)
+    - GOOG   # Google (GCP)
+    - MSFT   # Microsoft (Azure)
+  crypto:
+    - FIL    # Filecoin
+    - AR     # Arweave
+    - AKT    # Akash
+    - RNDR   # Render
+
+gaming_metaverse:
+  name: "Gaming & Metaverse"
+  description: "Gaming and metaverse related assets"
+  stocks:
+    - RBLX   # Roblox
+    - U      # Unity
+    - EA     # Electronic Arts
+    - TTWO   # Take-Two
+  crypto:
+    - SAND   # The Sandbox
+    - MANA   # Decentraland
+    - AXS    # Axie Infinity
+    - IMX    # Immutable X
+
+memecoins:
+  name: "Meme & Community"
+  description: "Meme coins and community-driven tokens"
+  stocks: []
+  crypto:
+    - DOGE   # Dogecoin
+    - SHIB   # Shiba Inu
+    - PEPE   # Pepe
+    - WIF    # dogwifhat
+    - BONK   # Bonk
+    - FLOKI  # Floki
+
+# Default watchlist (Calvin's request)
+default_watchlist:
+  crypto:
+    - BTC
+    - ETH
+    - SOL
+  stocks:
+    - V
+    - MA
+    - NVDA
+    - INTC
+    - MSFT
+    - GOOGL
+    - JPM
+    - COIN
+    - SOFI
