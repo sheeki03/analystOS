@@ -28,24 +28,32 @@ if not OPENROUTER_API_KEY:
 
 OPENROUTER_BASE_URL = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
 # Set the default model for the application. This can be overridden by user selection in the UI.
-OPENROUTER_PRIMARY_MODEL = os.getenv("OPENROUTER_PRIMARY_MODEL", "anthropic/claude-sonnet-4.5")
+OPENROUTER_PRIMARY_MODEL = os.getenv("OPENROUTER_PRIMARY_MODEL", "nvidia/nemotron-3-nano-30b-a3b:free")
+OPENROUTER_FALLBACK_MODEL = os.getenv("OPENROUTER_FALLBACK_MODEL", "anthropic/claude-sonnet-4")
+OPENROUTER_VISION_MODEL = os.getenv("OPENROUTER_VISION_MODEL", "allenai/molmo-2-8b:free")
+OPENROUTER_IMAGE_MODEL = os.getenv("OPENROUTER_IMAGE_MODEL", "bytedance-seed/seedream-4.5")
 
 # Standard AI Model Options for both Interactive Research and Notion Automation
 AI_MODEL_OPTIONS = {
+    # Free Models (Primary)
+    "nvidia/nemotron-3-nano-30b-a3b:free": "Nemotron 3 Nano 30B (Free)",
+    "allenai/molmo-2-8b:free": "Molmo 2 8B Vision (Free)",
+    "qwen/qwen3-30b-a3b:free": "Qwen3 30B (Free)",
+    "qwen/qwen3-235b-a22b:free": "Qwen3 235B (Free)",
+    "tngtech/deepseek-r1t-chimera:free": "DeepSeek R1T Chimera (Free)",
+    # Image Generation
+    "bytedance-seed/seedream-4.5": "Seedream 4.5 (Image)",
+    # Anthropic Models
+    "anthropic/claude-sonnet-4": "Claude Sonnet 4",
+    "anthropic/claude-sonnet-4.5": "Claude Sonnet 4.5",
+    "anthropic/claude-opus-4.5": "Claude Opus 4.5",
     # OpenAI Models
     "openai/gpt-5.2": "GPT-5.2",
     "openai/gpt-5.2-pro": "GPT-5.2 Pro",
-    # Anthropic Models
-    "anthropic/claude-sonnet-4.5": "Claude Sonnet 4.5",
-    "anthropic/claude-opus-4.5": "Claude Opus 4.5",
     # Google Models
     "google/gemini-3": "Gemini 3",
     "google/gemini-2.5-pro": "Gemini 2.5 Pro",
     "google/gemini-2.5-flash": "Gemini 2.5 Flash",
-    # Free Models
-    "qwen/qwen3-30b-a3b:free": "Qwen3 30B (Free)",
-    "qwen/qwen3-235b-a22b:free": "Qwen3 235B (Free)",
-    "tngtech/deepseek-r1t-chimera:free": "DeepSeek R1T Chimera (Free)",
 }
 
 # Application Settings
