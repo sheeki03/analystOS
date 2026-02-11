@@ -49,8 +49,7 @@ openbb>=4.5.0
 
 # ===== MCP & CRYPTO ANALYSIS =====
 # MCP (Model Context Protocol) Dependencies
-aiofiles>=23.2.1  # Already included above
-asyncio>=3.4.3
+aiofiles>=23.2.1
 websockets>=12.0  # For MCP SSE connections
 pydantic>=2.0.0  # For data validation and models
 
@@ -77,7 +76,6 @@ notion-client>=2.2.1
 firecrawl-py>=2.4.0
 
 # ===== ASYNC UTILITIES =====
-aiofiles>=23.2.1
 asyncio-throttle>=1.0.2
 tenacity>=8.0.0
 
@@ -99,7 +97,7 @@ langchain-community>=0.3.9
 langchain-openai>=0.3.7
 langchain-anthropic>=0.3.15
 langchain-mcp-adapters>=0.1.6
-langchain-deepseek>=0.1.2
+langchain-deepseek>=1.0.0
 langchain-tavily
 langchain-groq>=0.2.4
 tavily-python>=0.5.0
@@ -109,7 +107,6 @@ linkup-sdk>=0.2.3
 exa-py>=1.8.8
 markdownify>=0.11.6
 azure-identity>=1.21.0
-azure-search>=1.0.0b2
 azure-search-documents>=11.5.2
 langsmith>=0.3.37
 langchain-google-vertexai>=2.0.25
