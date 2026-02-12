@@ -1,0 +1,37 @@
+{
+  "name": "analystos-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "next": "14.2.5",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "recharts": "^2.12.7",
+    "lucide-react": "^0.436.0",
+    "react-dropzone": "^14.2.3",
+    "react-markdown": "^9.0.1",
+    "zustand": "^4.5.4",
+    "date-fns": "^3.6.0",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^2.5.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.10",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "typescript": "^5.5.3",
+    "tailwindcss": "^3.4.7",
+    "postcss": "^8.4.40",
+    "autoprefixer": "^10.4.19",
+    "@tailwindcss/typography": "^0.5.13",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "14.2.5"
+  }
+}

@@ -61,6 +61,13 @@ bokeh>=3.0.0    # Alternative plotting library
 # ===== AUTHENTICATION & SECURITY =====
 bcrypt>=4.1.0
 cryptography>=41.0.0
+python-jose[cryptography]>=3.3.0  # JWT encoding/decoding
+
+# ===== BACKGROUND JOBS =====
+arq>=0.26.0  # Redis-backed async job queue
+
+# ===== FILE VALIDATION =====
+python-magic>=0.4.27  # MIME type detection (requires libmagic system library)
 
 # ===== CONFIGURATION & ENVIRONMENT =====
 python-dotenv>=1.0.1
