@@ -180,6 +180,19 @@ TAVILY_API_KEY=your_tavily_key
 SESSION_SECRET_KEY=your_random_secret_key
 ```
 
+#### Using an alternative OpenAI-compatible gateway (e.g. OpenPaths)
+
+The OpenRouter base URL is overridable, so any OpenAI-compatible gateway works by
+pointing `OPENROUTER_BASE_URL` at it. For example, to use
+[OpenPaths](https://openpaths.io) (an OpenAI-compatible gateway; browse models at
+`https://openpaths.io/v1/models`, get a key at https://openpaths.io/account):
+
+```env
+# Optional: route AI calls through OpenPaths instead of OpenRouter
+OPENROUTER_BASE_URL=https://openpaths.io/v1
+OPENROUTER_API_KEY=your_openpaths_key
+```
+
 ### 3. Run Application
 
 ```bash
