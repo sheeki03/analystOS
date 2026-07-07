@@ -102,7 +102,8 @@ langchain-tavily
 langchain-groq>=0.2.4
 tavily-python>=0.5.0
 arxiv>=2.1.3
-xmltodict>=0.14.2
+# openbb (via openbb-sec) requires xmltodict<0.14, so >=0.14.2 was unresolvable.
+xmltodict>=0.13.0,<0.14.0
 linkup-sdk>=0.2.3
 exa-py>=1.8.8
 markdownify>=0.11.6
@@ -118,8 +119,11 @@ mcp>=1.9.4
 kitchenai-whisk
 
 # ===== ENTITY EXTRACTION =====
-# Pin to specific version to avoid API drift (prompt_description vs instructions, etc.)
-langextract==0.1.0
+# langextract 0.1.x pulls langfun, which pins openai==0.27.2 — unresolvable
+# against openai>=1.14.3 above. 1.x drops that constraint. langextract_service
+# already probes both API shapes (prompt_description / instructions), so the
+# bump is compatible.
+langextract==1.6.0
 
 # ===== TESTING =====
 pytest>=7.4.0
@@ -159,8 +163,9 @@ browser-use>=0.11.4
 #
 # ===== QUICK START =====
 #
-# 1. Create virtual environment (Python 3.13 required for OpenBB):
-#    python3.13 -m venv venv && source venv/bin/activate
+# 1. Create virtual environment (Python 3.11+; matches the Dockerfile. The
+#    resolved set installs cleanly on 3.11, 3.12, and 3.13):
+#    python3.11 -m venv venv && source venv/bin/activate
 #
 # 2. Install system dependencies (macOS example):
 #    brew install tesseract libmagic

@@ -465,7 +465,7 @@ class InteractiveResearchPage(BasePage):
 
         if not LANGEXTRACT_IMPORT_SUCCESS:
             st.error(f"⚠️ langextract not installed: {_IMPORT_ERROR}")
-            st.caption("Install with: `pip install langextract==0.1.0` and `brew install libmagic` (macOS)")
+            st.caption("Install with: `pip install langextract==1.6.0` and `brew install libmagic` (macOS)")
             st.session_state.langextract_enabled = False
             return
 
