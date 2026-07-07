@@ -25,6 +25,7 @@ from .crypto_resolver import (
     get_available_crypto_tickers as _get_available_crypto_tickers,
 )
 from ..openbb import OpenBBClient
+from ..marketdata_client import MarketDataWarehouse, MarketDataUnavailable
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +39,43 @@ def _get_openbb_client() -> OpenBBClient:
     if _openbb_client is None:
         _openbb_client = OpenBBClient()
     return _openbb_client
+
+
+# Singleton client for the optional private market-data warehouse.
+_marketdata_warehouse: Optional[MarketDataWarehouse] = None
+
+
+def _get_warehouse() -> MarketDataWarehouse:
+    """Get or create the market-data warehouse client singleton."""
+    global _marketdata_warehouse
+    if _marketdata_warehouse is None:
+        _marketdata_warehouse = MarketDataWarehouse()
+    return _marketdata_warehouse
+
+
+def _warehouse_source(table: str) -> str:
+    """A provenance label for warehouse-sourced rows (no external URL)."""
+    return f"marketdata://warehouse/{table}"
+
+
+def _warehouse_result(query_fn, table: str) -> str:
+    """Run ``query_fn(warehouse)`` and format it as a tool result.
+
+    Degrades gracefully (per analystOS's optional-provider style): if the
+    warehouse is not configured or is unavailable, returns a clear payload
+    instead of raising, so the app never crashes when the warehouse is absent.
+    """
+    warehouse = _get_warehouse()
+    if not warehouse.configured:
+        return format_tool_result(warehouse.not_configured_payload(), [])
+    try:
+        data = query_fn(warehouse)
+    except MarketDataUnavailable as exc:
+        return format_tool_result({"status": "unavailable", "reason": str(exc), "rows": []}, [])
+    except Exception as exc:  # noqa: BLE001 - surface the query error, do not crash
+        logger.error(f"marketdata warehouse query failed for {table}: {exc}")
+        return format_tool_result({"status": "error", "reason": str(exc), "rows": []}, [])
+    return format_tool_result(data, [_warehouse_source(table)])
 
 
 # ==================== PRICE DATA ====================
@@ -64,9 +102,15 @@ def get_prices(
     end_date: str,
     interval: str = "day",
     interval_multiplier: int = 1,
+    basis: str = "raw",
 ) -> str:
     """
     Retrieves historical price data for a stock over a specified date range.
+
+    When the private market-data warehouse is configured it is preferred for
+    daily bars (unadjusted EOD by default, or split-adjusted with
+    basis="adjusted"); otherwise (or for non-daily intervals, or symbols not in
+    the warehouse) this falls back to the existing OpenBB/yfinance path.
 
     Args:
         ticker: Stock ticker symbol (e.g., "AAPL")
@@ -74,10 +118,27 @@ def get_prices(
         end_date: End date in YYYY-MM-DD format (required)
         interval: Time interval - "minute", "day", "week", "month", "year" (default: "day")
         interval_multiplier: Multiplier for interval (default: 1)
+        basis: "raw" (unadjusted, default) or "adjusted" (split-adjusted).
+            Only applies to the warehouse path; ignored by the fallback.
 
     Returns:
         JSON string with list of price bars and source URLs
     """
+    # Prefer the private warehouse for plain daily bars when it is configured.
+    warehouse = _get_warehouse()
+    if warehouse.configured and interval == "day" and interval_multiplier == 1:
+        try:
+            bars = warehouse.price_bars(ticker, start_date, end_date, basis=basis)
+        except Exception as exc:  # noqa: BLE001 - warehouse hiccup -> fall back
+            logger.warning(
+                f"marketdata warehouse get_prices failed for {ticker}, "
+                f"falling back to OpenBB: {exc}"
+            )
+            bars = None
+        if bars:
+            return format_tool_result(bars, [_warehouse_source("equities_eod")])
+        # Configured but no rows (symbol not in the warehouse universe): fall back.
+
     client = _get_openbb_client()
     data = client.get_prices(
         ticker=ticker,
@@ -646,6 +707,170 @@ def get_segmented_revenues(
     return format_tool_result(data, [url])
 
 
+# ==================== MARKET-DATA WAREHOUSE ====================
+# These tools read from an optional, separately-maintained private market-data
+# warehouse (commodities, COT positioning, warehouse stocks, copper import-arb,
+# issuer market caps). When it is not configured they return a clear
+# "unavailable" payload rather than raising.
+
+def get_commodity_prices(
+    product_root: Optional[str] = None,
+    exchange: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    limit: int = 500,
+) -> str:
+    """
+    Retrieves historical daily futures prices from the private market-data warehouse.
+
+    Args:
+        product_root: Product root, e.g. "cu" (SHFE copper), "HG" (COMEX copper)
+        exchange: Exchange code, e.g. "SHFE", "INE", "CME"
+        start_date: Start date (YYYY-MM-DD)
+        end_date: End date (YYYY-MM-DD)
+        limit: Max rows to return (default: 500)
+
+    Returns:
+        JSON string with per-contract daily rows (settle/close, volume, open interest)
+    """
+    return _warehouse_result(
+        lambda w: w.commodity_prices(product_root, exchange, start_date, end_date, limit),
+        "futures_daily_all",
+    )
+
+
+def get_futures_voi(
+    product_root: Optional[str] = None,
+    exchange: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    limit: int = 500,
+) -> str:
+    """
+    Retrieves a per-product futures volume and open-interest (VOI) series.
+
+    Volume and open interest are summed across contracts per trade date, giving
+    an open-interest / volume trend for a product (e.g. SHFE copper OI over time).
+
+    Args:
+        product_root: Product root, e.g. "cu" for SHFE copper
+        exchange: Exchange code, e.g. "SHFE"
+        start_date: Start date (YYYY-MM-DD)
+        end_date: End date (YYYY-MM-DD)
+        limit: Max rows to return (default: 500)
+
+    Returns:
+        JSON string with total volume and open interest per product per date
+    """
+    return _warehouse_result(
+        lambda w: w.futures_voi(product_root, exchange, start_date, end_date, limit),
+        "futures_daily_all",
+    )
+
+
+def get_cot_positioning(
+    market_code: Optional[str] = None,
+    dataset: Optional[str] = None,
+    limit: int = 300,
+) -> str:
+    """
+    Retrieves CFTC Commitments of Traders (COT) positioning for a market.
+
+    Returns weekly long/short positions plus positioning percentiles computed
+    over each series' own history.
+
+    Args:
+        market_code: CFTC market code for the commodity
+        dataset: Optional dataset family (e.g. legacy vs disaggregated)
+        limit: Max rows to return per section (default: 300)
+
+    Returns:
+        JSON string with "weekly" positions and "percentiles"
+    """
+    return _warehouse_result(
+        lambda w: w.cot_positioning(market_code, dataset, limit),
+        "cot_weekly",
+    )
+
+
+def get_warehouse_stocks(
+    metal: Optional[str] = "copper",
+    exchange: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    limit: int = 500,
+) -> str:
+    """
+    Retrieves exchange warehouse metal-stock levels (tonnes), incl. copper history.
+
+    Args:
+        metal: Metal name (default: "copper")
+        exchange: Optional exchange filter (e.g. "LME", "SHFE")
+        start_date: Start date (YYYY-MM-DD)
+        end_date: End date (YYYY-MM-DD)
+        limit: Max rows to return per section (default: 500)
+
+    Returns:
+        JSON string with "stocks" rows and "copper_history" rows
+    """
+    return _warehouse_result(
+        lambda w: w.warehouse_stocks(metal, exchange, start_date, end_date, limit),
+        "warehouse_stocks",
+    )
+
+
+def get_arb_window(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    limit: int = 500,
+) -> str:
+    """
+    Retrieves the China copper import-arbitrage window (import parity vs SHFE).
+
+    Rows are indicative and carry a `param_status` field describing any missing
+    or stale inputs (the panel is greyed out rather than fabricated when inputs
+    are absent).
+
+    Args:
+        start_date: Start date (YYYY-MM-DD)
+        end_date: End date (YYYY-MM-DD)
+        limit: Max rows to return (default: 500)
+
+    Returns:
+        JSON string with import-arb rows (CNY/tonne) and param_status
+    """
+    return _warehouse_result(
+        lambda w: w.arb_window(start_date, end_date, limit),
+        "import_arb",
+    )
+
+
+def get_market_cap(
+    ticker: Optional[str] = None,
+    cik: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    limit: int = 5000,
+) -> str:
+    """
+    Retrieves issuer-level market-capitalization history (price x shares outstanding).
+
+    Args:
+        ticker: Stock ticker symbol (e.g. "NVDA"); resolved to an issuer
+        cik: SEC CIK (alternative to ticker)
+        start_date: Start date (YYYY-MM-DD)
+        end_date: End date (YYYY-MM-DD)
+        limit: Max rows to return (default: 5000)
+
+    Returns:
+        JSON string with the issuer market-cap series (economic series)
+    """
+    return _warehouse_result(
+        lambda w: w.market_cap(cik, ticker, start_date, end_date, limit),
+        "issuer_market_cap",
+    )
+
+
 # ==================== TOOL MAP ====================
 
 # All finance tools as a list (matching Dexter's FINANCE_TOOLS array)
@@ -674,6 +899,13 @@ FINANCIAL_TOOLS = [
     get_news,
     get_insider_trades,
     get_segmented_revenues,
+    # Market-Data Warehouse (optional private source)
+    get_commodity_prices,
+    get_futures_voi,
+    get_cot_positioning,
+    get_warehouse_stocks,
+    get_arb_window,
+    get_market_cap,
 ]
 
 # Tool name to function map (for router)
@@ -697,4 +929,11 @@ FINANCIAL_TOOL_MAP = {
     "get_news": get_news,
     "get_insider_trades": get_insider_trades,
     "get_segmented_revenues": get_segmented_revenues,
+    # Market-Data Warehouse (optional private source)
+    "get_commodity_prices": get_commodity_prices,
+    "get_futures_voi": get_futures_voi,
+    "get_cot_positioning": get_cot_positioning,
+    "get_warehouse_stocks": get_warehouse_stocks,
+    "get_arb_window": get_arb_window,
+    "get_market_cap": get_market_cap,
 }

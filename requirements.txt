@@ -47,6 +47,34 @@ numpy>=1.24.0
 # Requires provider API keys to be set in environment (FMP_API_KEY, etc.)
 openbb>=4.5.0
 
+# ===== OPTIONAL: PRIVATE MARKET-DATA WAREHOUSE =====
+# analystOS can optionally read from a private market-data warehouse to serve
+# commodities, COT positioning, warehouse stocks, the copper import-arb window,
+# and issuer market-cap history (tools: get_commodity_prices, get_futures_voi,
+# get_cot_positioning, get_warehouse_stocks, get_arb_window, get_market_cap; it
+# also becomes the preferred source for get_prices when configured).
+#
+# These deps are intentionally OPTIONAL and kept OUT of the default install so
+# the core app stays installable on both the Dockerfile's Python 3.11 and the
+# README's Python 3.13 without pulling a heavier data stack. If the warehouse
+# is not configured the tools degrade gracefully (they return an "unavailable"
+# payload) and the rest of the app is unaffected.
+#
+# Zero-dependency path (recommended): point MARKETDATA_WAREHOUSE_PATH at a
+# synced, prebuilt read-only warehouse (.duckdb) file and install only DuckDB:
+#     pip install "duckdb>=1.0"
+#
+# Full path: install the private 'marketdata' package (auth required) so it can
+# build the warehouse from a release, then set MARKETDATA_RELEASE:
+#     pip install "duckdb>=1.0"
+#     pip install "git+https://github.com/sheeki03/marketdata.git"   # private repo
+#
+# Configuration environment variables:
+#     MARKETDATA_WAREHOUSE_PATH  path to a prebuilt read-only .duckdb file (preferred)
+#     MARKETDATA_RELEASE         release id/path used with the 'marketdata' package
+# (The 'marketdata' package reads any remote-store credentials from its own
+#  environment; analystOS handles none of those secrets itself.)
+
 # ===== MCP & CRYPTO ANALYSIS =====
 # MCP (Model Context Protocol) Dependencies
 aiofiles>=23.2.1

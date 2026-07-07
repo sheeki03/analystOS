@@ -64,6 +64,12 @@ def build_tool_schemas() -> List[Dict[str, Any]]:
                         "end_date": {
                             "type": "string",
                             "description": "End date in YYYY-MM-DD format. Must be today or in the past. Required."
+                        },
+                        "basis": {
+                            "type": "string",
+                            "enum": ["raw", "adjusted"],
+                            "default": "raw",
+                            "description": "Price basis when the private warehouse serves the data: 'raw' (unadjusted, default) or 'adjusted' (split-adjusted). Ignored by the fallback provider."
                         }
                     },
                     "required": ["ticker", "start_date", "end_date"]
@@ -555,6 +561,200 @@ def build_tool_schemas() -> List[Dict[str, Any]]:
                         }
                     },
                     "required": ["ticker", "period"]
+                }
+            }
+        },
+
+        # ==================== MARKET-DATA WAREHOUSE ====================
+        # Optional private warehouse: commodities, COT, warehouse stocks,
+        # copper import-arb, and issuer market caps. These tools return an
+        # "unavailable" payload when the warehouse is not configured.
+        {
+            "type": "function",
+            "function": {
+                "name": "get_commodity_prices",
+                "description": "Retrieves historical daily futures prices (settle/close, volume, open interest) for a commodity from a private market-data warehouse (e.g. CME metals/energy, SHFE/INE copper). Filter by product root, exchange, and date range.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "product_root": {
+                            "type": "string",
+                            "description": "Product root, e.g. 'cu' for SHFE copper or 'HG' for COMEX copper."
+                        },
+                        "exchange": {
+                            "type": "string",
+                            "description": "Exchange code, e.g. 'SHFE', 'INE', or 'CME'."
+                        },
+                        "start_date": {
+                            "type": "string",
+                            "description": "Start date in YYYY-MM-DD format."
+                        },
+                        "end_date": {
+                            "type": "string",
+                            "description": "End date in YYYY-MM-DD format."
+                        },
+                        "limit": {
+                            "type": "integer",
+                            "default": 500,
+                            "description": "Maximum number of rows to return (default: 500)."
+                        }
+                    },
+                    "required": []
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "get_futures_voi",
+                "description": "Retrieves a per-product futures volume and open-interest (VOI) time series from a private market-data warehouse, summed across contracts per trade date. Useful for open-interest and volume trends (e.g. SHFE copper open interest over the last 6 months).",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "product_root": {
+                            "type": "string",
+                            "description": "Product root, e.g. 'cu' for SHFE copper."
+                        },
+                        "exchange": {
+                            "type": "string",
+                            "description": "Exchange code, e.g. 'SHFE'."
+                        },
+                        "start_date": {
+                            "type": "string",
+                            "description": "Start date in YYYY-MM-DD format."
+                        },
+                        "end_date": {
+                            "type": "string",
+                            "description": "End date in YYYY-MM-DD format."
+                        },
+                        "limit": {
+                            "type": "integer",
+                            "default": 500,
+                            "description": "Maximum number of rows to return (default: 500)."
+                        }
+                    },
+                    "required": []
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "get_cot_positioning",
+                "description": "Retrieves CFTC Commitments of Traders (COT) positioning for a market from a private market-data warehouse: weekly long/short positions plus positioning percentiles computed over each series' own history.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "market_code": {
+                            "type": "string",
+                            "description": "CFTC market code for the commodity."
+                        },
+                        "dataset": {
+                            "type": "string",
+                            "description": "Optional dataset family (e.g. legacy vs disaggregated); families are never mixed."
+                        },
+                        "limit": {
+                            "type": "integer",
+                            "default": 300,
+                            "description": "Maximum number of rows to return per section (default: 300)."
+                        }
+                    },
+                    "required": []
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "get_warehouse_stocks",
+                "description": "Retrieves exchange warehouse metal-stock levels (in tonnes) from a private market-data warehouse, including LME/SHFE stocks and copper stock history.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "metal": {
+                            "type": "string",
+                            "default": "copper",
+                            "description": "Metal name (default: 'copper')."
+                        },
+                        "exchange": {
+                            "type": "string",
+                            "description": "Optional exchange filter, e.g. 'LME' or 'SHFE'."
+                        },
+                        "start_date": {
+                            "type": "string",
+                            "description": "Start date in YYYY-MM-DD format."
+                        },
+                        "end_date": {
+                            "type": "string",
+                            "description": "End date in YYYY-MM-DD format."
+                        },
+                        "limit": {
+                            "type": "integer",
+                            "default": 500,
+                            "description": "Maximum number of rows to return per section (default: 500)."
+                        }
+                    },
+                    "required": []
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "get_arb_window",
+                "description": "Retrieves the China copper import-arbitrage window (import parity vs SHFE, in CNY per tonne) from a private market-data warehouse. Rows are indicative and carry a 'param_status' field indicating any missing or stale inputs.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "start_date": {
+                            "type": "string",
+                            "description": "Start date in YYYY-MM-DD format."
+                        },
+                        "end_date": {
+                            "type": "string",
+                            "description": "End date in YYYY-MM-DD format."
+                        },
+                        "limit": {
+                            "type": "integer",
+                            "default": 500,
+                            "description": "Maximum number of rows to return (default: 500)."
+                        }
+                    },
+                    "required": []
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "get_market_cap",
+                "description": "Retrieves issuer-level market-capitalization history (price x shares outstanding) from a private market-data warehouse. Provide a ticker (e.g. 'NVDA') or a CIK.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "ticker": {
+                            "type": "string",
+                            "description": "The stock ticker symbol, e.g. 'NVDA'."
+                        },
+                        "cik": {
+                            "type": "string",
+                            "description": "SEC CIK identifier (alternative to ticker)."
+                        },
+                        "start_date": {
+                            "type": "string",
+                            "description": "Start date in YYYY-MM-DD format."
+                        },
+                        "end_date": {
+                            "type": "string",
+                            "description": "End date in YYYY-MM-DD format."
+                        },
+                        "limit": {
+                            "type": "integer",
+                            "default": 5000,
+                            "description": "Maximum number of rows to return (default: 5000)."
+                        }
+                    },
+                    "required": []
                 }
             }
         }

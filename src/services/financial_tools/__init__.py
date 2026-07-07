@@ -32,6 +32,13 @@ from .tools import (
     get_news,
     get_insider_trades,
     get_segmented_revenues,
+    # Market-Data Warehouse (optional private source)
+    get_commodity_prices,
+    get_futures_voi,
+    get_cot_positioning,
+    get_warehouse_stocks,
+    get_arb_window,
+    get_market_cap,
     # Tool collections
     FINANCIAL_TOOLS,
     FINANCIAL_TOOL_MAP,
@@ -80,6 +87,13 @@ __all__ = [
     'get_news',
     'get_insider_trades',
     'get_segmented_revenues',
+    # Market-Data Warehouse (optional private source)
+    'get_commodity_prices',
+    'get_futures_voi',
+    'get_cot_positioning',
+    'get_warehouse_stocks',
+    'get_arb_window',
+    'get_market_cap',
     # Tool collections
     'FINANCIAL_TOOLS',
     'FINANCIAL_TOOL_MAP',

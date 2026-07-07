@@ -61,6 +61,15 @@ Given a user's natural language query about financial data, call the appropriate
    - Crypto tickers must use format "SYMBOL-USD" (e.g., "BTC-USD", "ETH-USD")
    - Only USD pairs are supported (not BTC-ETH)
 
+4b. **Commodities & Market-Data Warehouse** (private warehouse; used when configured):
+   - Commodity/futures prices (copper, metals, energy) → get_commodity_prices
+   - Futures volume / open interest trends (e.g. "SHFE copper OI last 6 months") → get_futures_voi
+   - CFTC COT positioning and percentiles → get_cot_positioning
+   - Exchange warehouse metal stocks (LME/SHFE, copper) → get_warehouse_stocks
+   - China copper import-arbitrage window → get_arb_window
+   - Issuer market-cap history (e.g. "NVDA market cap over 10 years") → get_market_cap
+   - Use product roots like "cu" (SHFE copper) or "HG" (COMEX copper) and exchanges like "SHFE"/"INE"/"CME"
+
 5. **Efficiency**:
    - Prefer specific tools over general ones when possible
    - Use get_all_financial_statements only when multiple statement types needed
