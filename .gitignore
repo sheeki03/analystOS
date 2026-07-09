@@ -10,8 +10,8 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
+/lib/
+/lib64/
 parts/
 sdist/
 var/
@@ -141,6 +141,34 @@ yarn-error.log*
 /.cursor
 .env.example
 /.taskmaster
+
+# FewWord context plugin
+.fewword/scratch/
+.fewword/index/
+
+# FewWord context plugin
+.fewword/scratch/
+.fewword/index/
+
+# FewWord context plugin
+.fewword/scratch/
+.fewword/index/
+
+# FewWord context plugin
+.fewword/scratch/
+.fewword/index/
+
+# FewWord context plugin
+.fewword/scratch/
+.fewword/index/
+
+# FewWord context plugin
+.fewword/scratch/
+.fewword/index/
+
+# FewWord context plugin
+.fewword/scratch/
+.fewword/index/
 
 # FewWord context plugin
 .fewword/scratch/
